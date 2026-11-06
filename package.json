@@ -1,0 +1,14 @@
+{
+  "name": "english-game",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "server": "npm run dev --workspace apps/server",
+    "web": "npm run web --workspace apps/app",
+    "map": "npm run map --workspace apps/server",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}

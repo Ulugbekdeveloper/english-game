@@ -1,0 +1,609 @@
+<meta charset="utf-8">
+<title>Imperiya Senariysi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: a 16:9 "game stage" (parchment world, always the same look) framed by a quiet page chrome that follows the viewer theme; narration + transport controls under the stage. */
+:root{
+  --bg:#f3efe6; --fg:#241d14; --muted:#6b6050; --line:#d8cfbe; --panel:#fbf8f1; --accent:#8c2f28;
+  --font-display:"Cinzel","Georgia",serif; --font-ui:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#17140f; --fg:#eae3d6; --muted:#a3978a; --line:#3a332a; --panel:#211c16; --accent:#d9695f; color-scheme:dark } }
+:root[data-theme="dark"]{ --bg:#17140f; --fg:#eae3d6; --muted:#a3978a; --line:#3a332a; --panel:#211c16; --accent:#d9695f; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:15px;line-height:1.45;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-block:18px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 18px;margin-bottom:12px}
+header h1{font-family:var(--font-display);font-weight:700;font-size:clamp(20px,3vw,30px);margin:0;letter-spacing:.02em;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:62ch}
+.counter{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600}
+
+/* ---------- stage ---------- */
+.stage{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;background:#4b6f94;border-radius:10px;overflow:hidden;container-type:inline-size;box-shadow:0 10px 40px rgba(0,0,0,.25);font-family:var(--font-ui);color:#241d14;user-select:none}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;font-size:1.35cqw;line-height:1.3}
+.card{background:rgba(251,246,232,.97);border:1px solid #b8a37c;border-radius:.6cqw;box-shadow:0 .3cqw 1.2cqw rgba(30,20,5,.25);color:#241d14}
+.card h4{margin:0;font-family:var(--font-display);font-size:1.15cqw;letter-spacing:.08em;text-transform:uppercase;color:#6b4a1e;padding:.7cqw 1cqw .4cqw;border-bottom:1px solid #d9c9a3}
+.lb{left:1.2cqw;top:1.2cqw;width:27cqw}
+.lb table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.lb th{font-size:1cqw;color:#6b6050;text-align:right;font-weight:600;padding:.35cqw .5cqw 0;white-space:nowrap}
+.lb th:first-child,.lb th:nth-child(2){text-align:left}
+.lb td{padding:.22cqw .5cqw;text-align:right;white-space:nowrap}
+.lb td:first-child,.lb td:nth-child(2){text-align:left}
+.lb tr.you td{background:#f1dfb0;font-weight:700}
+.lb tr.me-row td{border-top:1px dashed #b8a37c}
+.dot{display:inline-block;width:.9cqw;height:.9cqw;border-radius:50%;vertical-align:middle;margin-right:.4cqw;border:1px solid rgba(0,0,0,.3)}
+.rel{display:inline-block;font-size:.85cqw;padding:0 .4cqw;border-radius:.3cqw;margin-left:.4cqw;vertical-align:middle;font-weight:700;letter-spacing:.03em}
+.rel.ally{background:#cfe8cf;color:#1f5e2a}.rel.enemy{background:#f3c9c6;color:#7a1c17}.rel.human{background:#e5dcc8;color:#5a4a2a}
+
+.me{right:1.2cqw;top:1.2cqw;width:21cqw}
+.me .grid{display:grid;grid-template-columns:1fr 1fr;gap:.4cqw .8cqw;padding:.7cqw 1cqw}
+.stat{display:flex;flex-direction:column}
+.stat b{font-size:1.9cqw;line-height:1.05;font-variant-numeric:tabular-nums}
+.stat span{font-size:.95cqw;color:#6b6050;letter-spacing:.04em;text-transform:uppercase}
+.stat.hl b{color:#8c2f28}
+.me .foot{border-top:1px solid #d9c9a3;padding:.45cqw 1cqw;font-size:1cqw;color:#5a4a2a;display:flex;justify-content:space-between}
+.timer{position:absolute;left:50%;top:1.2cqw;transform:translateX(-50%);padding:.4cqw 1.4cqw;font-family:var(--font-display);font-size:1.6cqw;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+
+/* bottom action bar + sheet */
+.actions{position:absolute;left:50%;bottom:1.4cqw;transform:translateX(-50%);display:flex;gap:.8cqw;align-items:center}
+.btn{font:inherit;font-weight:700;font-size:1.35cqw;padding:.75cqw 1.6cqw;border-radius:.6cqw;border:1px solid #6b4a1e;background:linear-gradient(#f6ead0,#e7d3a6);color:#2a1d0c;box-shadow:0 .25cqw 0 #a98b58,0 .4cqw 1cqw rgba(0,0,0,.25);cursor:default;display:inline-flex;align-items:center;gap:.6cqw;white-space:nowrap}
+.btn.primary{background:linear-gradient(#b4463d,#8c2f28);color:#fff;border-color:#5a1c17;box-shadow:0 .25cqw 0 #4a1512,0 .4cqw 1cqw rgba(0,0,0,.3)}
+.btn.ghost{background:rgba(251,246,232,.9)}
+.btn.danger{background:linear-gradient(#5b2a86,#3f1a60);color:#fff;border-color:#2a1040;box-shadow:0 .25cqw 0 #200a30}
+.btn.pressed{transform:translateY(.2cqw);box-shadow:0 .05cqw 0 #a98b58}
+.sheet{position:absolute;left:50%;bottom:5.6cqw;transform:translateX(-50%);width:50cqw;padding:1cqw 1.3cqw}
+.sheet .kind{display:flex;justify-content:space-between;align-items:center;font-size:1cqw;color:#6b4a1e;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.sheet .kind .lvl{background:#e9dcbd;border-radius:.3cqw;padding:0 .5cqw}
+.sheet .q{font-size:1.75cqw;font-weight:600;margin:.5cqw 0 .6cqw}
+.sheet .q small{display:block;font-size:1.1cqw;color:#6b6050;font-weight:400}
+.input{border:1px solid #a98b58;background:#fff;border-radius:.4cqw;padding:.6cqw .8cqw;font-size:1.5cqw;min-height:2.9cqw;font-family:var(--font-ui)}
+.input .caret{display:inline-block;width:.15cqw;height:1.5cqw;background:#241d14;vertical-align:-.2cqw;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.result{margin-top:.6cqw;font-size:1.25cqw;font-weight:700;display:flex;gap:1cqw;align-items:center;min-height:1.6cqw}
+.result.ok{color:#1f5e2a}.result.part{color:#8a5a00}.result.bad{color:#7a1c17}
+.mic{display:flex;align-items:center;gap:1cqw;margin-top:.3cqw}
+.mic .m{width:4cqw;height:4cqw;border-radius:50%;background:#8c2f28;border:.3cqw solid #f1dfb0;box-shadow:0 0 0 .2cqw #8c2f28;display:grid;place-items:center;color:#fff;font-size:1.8cqw}
+.mic .m.live{animation:pulse .8s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 .9cqw rgba(140,47,40,.25)}}
+.wave{display:flex;gap:.25cqw;align-items:center;height:3cqw;flex:1}
+.wave i{display:block;width:.45cqw;height:.4cqw;background:#8c2f28;border-radius:.2cqw;transition:height .12s}
+.wave.live i{animation:wv .5s ease-in-out infinite alternate}
+.wave i:nth-child(odd){animation-delay:.12s}.wave i:nth-child(3n){animation-delay:.25s}
+@keyframes wv{from{height:.4cqw}to{height:2.8cqw}}
+.transcript{font-size:1.25cqw;color:#5a4a2a;min-height:1.6cqw;margin-top:.3cqw}
+.words{display:grid;grid-template-columns:1fr 1fr;gap:.4cqw .8cqw;margin-top:.4cqw}
+.words div{display:flex;justify-content:space-between;gap:.6cqw;border:1px solid #d9c9a3;border-radius:.4cqw;padding:.25cqw .6cqw;font-size:1.2cqw;background:#fff}
+.words div.ok{border-color:#6fae7a;background:#eef7ee}.words div.bad{border-color:#d49b97;background:#faeceb}
+
+/* attack panel */
+.attack{position:absolute;left:50%;bottom:5.6cqw;transform:translateX(-50%);width:46cqw;padding:1cqw 1.3cqw}
+.attack .title{display:flex;justify-content:space-between;font-weight:700;font-size:1.5cqw}
+.attack .title .tgt{color:#5b2a86}
+.slider{position:relative;height:2.2cqw;margin:.8cqw 0 .4cqw;border-radius:1.1cqw;background:#e9dcbd;border:1px solid #a98b58;overflow:hidden}
+.slider .fill{position:absolute;inset:0;width:0;background:linear-gradient(90deg,#c9664f,#8c2f28)}
+.slider .lab{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:1.25cqw;color:#241d14;mix-blend-mode:multiply}
+.route{display:grid;grid-template-columns:repeat(3,1fr);gap:.6cqw;margin-top:.6cqw}
+.route div{background:#fff;border:1px solid #d9c9a3;border-radius:.4cqw;padding:.4cqw .6cqw;font-size:1.05cqw;color:#6b6050}
+.route b{display:block;font-size:1.5cqw;color:#241d14;font-variant-numeric:tabular-nums}
+.route .warn b{color:#8a5a00}
+.route .tag{display:inline-block;font-size:.9cqw;background:#efe3c4;border-radius:.3cqw;padding:0 .4cqw;margin:.2cqw .2cqw 0 0;color:#5a4a2a}
+.attack .row{display:flex;gap:.8cqw;justify-content:flex-end;margin-top:.8cqw}
+.prog{display:flex;gap:1.2cqw;align-items:center;font-size:1.2cqw;margin-top:.6cqw}
+.prog .bar{flex:1;height:1cqw;background:#e9dcbd;border-radius:.5cqw;overflow:hidden}
+.prog .bar i{display:block;height:100%;width:100%;background:#8c2f28}
+
+/* diplomacy side panel */
+.diplo{position:absolute;right:1.2cqw;top:14cqw;width:26cqw;bottom:6cqw;display:flex;flex-direction:column;overflow:hidden}
+.diplo .head{display:flex;justify-content:space-between;align-items:center;padding:.6cqw 1cqw;border-bottom:1px solid #d9c9a3;font-weight:700;font-size:1.3cqw}
+.diplo .head span{color:#3a8f4a}
+.chat{flex:1;overflow:hidden;padding:.6cqw .8cqw;display:flex;flex-direction:column;gap:.45cqw;font-size:1.15cqw}
+.msg{max-width:88%;padding:.4cqw .7cqw;border-radius:.6cqw;background:#fff;border:1px solid #d9c9a3;position:relative}
+.msg.me{align-self:flex-end;background:#f1dfb0}
+.msg .pts{position:absolute;right:-.2cqw;top:-.9cqw;font-size:.85cqw;font-weight:700;color:#1f5e2a;background:#cfe8cf;border-radius:.3cqw;padding:0 .35cqw}
+.terms{border-top:1px solid #d9c9a3;padding:.5cqw .8cqw;font-size:1.1cqw}
+.terms h5{margin:0 0 .3cqw;font-size:1cqw;letter-spacing:.06em;text-transform:uppercase;color:#6b4a1e}
+.terms label{display:flex;gap:.5cqw;align-items:center;padding:.15cqw 0}
+.terms .box{width:1.1cqw;height:1.1cqw;border:1px solid #6b4a1e;border-radius:.2cqw;display:grid;place-items:center;font-size:.9cqw;background:#fff}
+.terms .box.on{background:#3a8f4a;color:#fff;border-color:#1f5e2a}
+.sign{display:flex;gap:.6cqw;padding:.6cqw .8cqw;border-top:1px solid #d9c9a3}
+.sign .s{flex:1;text-align:center;padding:.5cqw;border-radius:.4cqw;border:1px dashed #a98b58;font-size:1.05cqw;color:#6b6050}
+.sign .s.done{background:#cfe8cf;border-style:solid;border-color:#1f5e2a;color:#1f5e2a;font-weight:700}
+
+/* context menu, toasts, banner, cursor */
+.ctx{position:absolute;width:17cqw;padding:.4cqw;transform:translate(-50%,-110%)}
+.ctx div{padding:.5cqw .8cqw;border-radius:.4cqw;font-size:1.2cqw;font-weight:600;display:flex;gap:.6cqw;align-items:center}
+.ctx div.hot{background:#f1dfb0}
+.ctx .name{font-family:var(--font-display);font-size:1cqw;letter-spacing:.06em;color:#6b4a1e;padding:.3cqw .8cqw;border-bottom:1px solid #d9c9a3;margin-bottom:.3cqw}
+.toasts{position:absolute;left:50%;top:5cqw;transform:translateX(-50%);display:flex;flex-direction:column;gap:.5cqw;align-items:center;pointer-events:none;width:48cqw}
+.toast{padding:.55cqw 1.2cqw;font-size:1.25cqw;font-weight:600;border-left:.4cqw solid #6b4a1e;animation:tin .25s ease-out}
+.toast.war{border-left-color:#7a1c17;background:#fbe9e7}.toast.ally{border-left-color:#1f5e2a;background:#eaf5ea}.toast.bonus{border-left-color:#b8860b;background:#fff6dc}
+@keyframes tin{from{opacity:0;transform:translateY(-.6cqw)}}
+.banner{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;padding:1.2cqw 2.4cqw;font-family:var(--font-display);font-size:2.2cqw;font-weight:700;letter-spacing:.04em;color:#2a1d0c}
+.banner small{display:block;font-family:var(--font-ui);font-size:1.2cqw;font-weight:400;letter-spacing:0;color:#6b6050;margin-top:.3cqw}
+.cursor{position:absolute;width:2.4cqw;height:2.4cqw;z-index:50;pointer-events:none;transition:left .55s cubic-bezier(.3,.7,.3,1),top .55s cubic-bezier(.3,.7,.3,1);filter:drop-shadow(0 .2cqw .3cqw rgba(0,0,0,.5))}
+.cursor::after{content:"";position:absolute;left:-1cqw;top:-1cqw;width:2cqw;height:2cqw;border-radius:50%;border:.25cqw solid #fff;opacity:0;transform:scale(.4)}
+.cursor.click::after{animation:clk .45s ease-out}
+@keyframes clk{0%{opacity:1;transform:scale(.3)}100%{opacity:0;transform:scale(1.6)}}
+.terrain-note{position:absolute;padding:.4cqw .9cqw;font-size:1.15cqw;font-weight:700;color:#5a3a10;background:rgba(251,246,232,.85);border:1px dashed #a98b58;border-radius:.4cqw;transform:translate(-50%,-50%);white-space:nowrap}
+.hint{position:absolute;padding:.5cqw .9cqw;font-size:1.15cqw;background:#2a1d0c;color:#f6ead0;border-radius:.4cqw;max-width:22cqw;line-height:1.3;box-shadow:0 .3cqw 1cqw rgba(0,0,0,.35)}
+.hint::before{content:"";position:absolute;width:.9cqw;height:.9cqw;background:#2a1d0c;transform:rotate(45deg)}
+.hint.left::before{left:-.45cqw;top:1cqw}.hint.right::before{right:-.45cqw;top:1cqw}.hint.up::before{top:-.45cqw;left:1.4cqw}
+
+/* full-stage app screens */
+.screen{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(251,246,232,.97),rgba(233,220,189,.97));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2cqw;padding:3cqw;font-size:1.4cqw;color:#241d14}
+.screen .logo{font-family:var(--font-display);font-size:4cqw;font-weight:700;letter-spacing:.08em;color:#8c2f28;line-height:1}
+.screen .logo small{display:block;font-family:var(--font-ui);font-size:1.3cqw;font-weight:400;letter-spacing:.2em;color:#6b4a1e;text-transform:uppercase;margin-top:.4cqw}
+.screen .stack{display:flex;flex-direction:column;gap:.7cqw;width:30cqw}
+.screen .btn{justify-content:center;font-size:1.5cqw}
+.field{display:flex;flex-direction:column;gap:.3cqw;width:100%}
+.field label{font-size:1cqw;text-transform:uppercase;letter-spacing:.06em;color:#6b4a1e;font-weight:700}
+.swatches{display:flex;gap:.6cqw}.swatches i{width:2.4cqw;height:2.4cqw;border-radius:.4cqw;border:.2cqw solid transparent}.swatches i.on{border-color:#241d14}
+.menu{display:grid;grid-template-columns:repeat(4,1fr);gap:1cqw;width:80cqw}
+.mode{padding:1.2cqw;text-align:left;display:flex;flex-direction:column;gap:.3cqw;min-height:11cqw}
+.mode b{font-family:var(--font-display);font-size:1.5cqw;color:#6b4a1e}
+.mode span{color:#6b6050;font-size:1.15cqw}
+.mode .n{margin-top:auto;font-weight:700;color:#1f5e2a}
+.mode.hot{outline:.3cqw solid #8c2f28}
+.profile{display:flex;gap:2cqw;align-items:center;width:80cqw;padding:1cqw 1.6cqw}
+.profile .avatar{width:5cqw;height:5cqw;border-radius:50%;background:#8c2f28;display:grid;place-items:center;color:#fff;font-family:var(--font-display);font-size:2.2cqw}
+.profile .stat b{font-size:1.9cqw}
+.profile .nav{margin-left:auto;display:flex;gap:1.2cqw;color:#6b4a1e;font-weight:600}
+.rooms{width:80cqw;display:flex;flex-direction:column;gap:.6cqw}
+.rooms .tabs{display:flex;gap:.4cqw}
+.rooms .tabs div{padding:.5cqw 1.1cqw;border-radius:.5cqw .5cqw 0 0;background:#e9dcbd;color:#6b4a1e;font-weight:600}
+.rooms .tabs div.on{background:#fbf8f1;color:#241d14;border:1px solid #b8a37c;border-bottom-color:#fbf8f1}
+.rooms table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;background:#fbf8f1}
+.rooms th{font-size:1.05cqw;color:#6b6050;text-align:left;padding:.5cqw .9cqw;border-bottom:1px solid #d9c9a3;letter-spacing:.04em;text-transform:uppercase}
+.rooms td{padding:.55cqw .9cqw;border-bottom:1px solid #eee4cf}
+.rooms tr.hot td{background:#f1dfb0}
+.pill{display:inline-block;padding:0 .5cqw;border-radius:.3cqw;background:#e5dcc8;font-size:1cqw;font-weight:700}
+.pill.live{background:#cfe8cf;color:#1f5e2a}
+.resultcard{width:62cqw;padding:1.4cqw 2cqw}
+.resultcard h3{font-family:var(--font-display);margin:0 0 .8cqw;font-size:2.4cqw;color:#8c2f28;text-align:center}
+.resultcard .big{display:grid;grid-template-columns:repeat(4,1fr);gap:1cqw;margin-bottom:1cqw}
+.resultcard .big div{background:#fff;border:1px solid #d9c9a3;border-radius:.5cqw;padding:.7cqw;text-align:center}
+.resultcard .big b{display:block;font-size:2.4cqw;font-variant-numeric:tabular-nums}
+.resultcard .big span{font-size:1cqw;color:#6b6050;text-transform:uppercase;letter-spacing:.05em}
+.skills{display:grid;grid-template-columns:1fr 1fr;gap:1cqw}
+.skills div{font-size:1.2cqw}
+.skills .bar{height:1cqw;background:#e9dcbd;border-radius:.5cqw;overflow:hidden;margin:.3cqw 0 .6cqw}
+.skills .bar i{display:block;height:100%;background:#3a8f4a}
+.chips{display:flex;flex-wrap:wrap;gap:.4cqw}
+.chips span{background:#faeceb;border:1px solid #d49b97;border-radius:.3cqw;padding:.1cqw .5cqw;font-size:1.05cqw}
+.teacher{width:84cqw;display:grid;grid-template-columns:1.1fr 1fr;gap:1.2cqw}
+.teacher .card{padding:1cqw 1.3cqw}
+.teacher h4{padding:0 0 .5cqw;border:0}
+.teacher ul{margin:.4cqw 0 0;padding-left:1.4cqw;font-size:1.15cqw}
+.teacher .code{font-family:var(--font-display);font-size:2.6cqw;letter-spacing:.2em;color:#8c2f28;text-align:center;padding:.5cqw;border:.2cqw dashed #a98b58;border-radius:.5cqw;margin:.5cqw 0}
+.teacher table{width:100%;border-collapse:collapse;font-size:1.1cqw;font-variant-numeric:tabular-nums}
+.teacher td,.teacher th{padding:.3cqw .5cqw;border-bottom:1px solid #eee4cf;text-align:left}
+.teacher th{color:#6b6050;font-size:.95cqw;text-transform:uppercase;letter-spacing:.04em}
+
+/* ---------- narration + controls ---------- */
+.narr{display:grid;grid-template-columns:auto 1fr;gap:14px 18px;align-items:start;margin-top:16px;padding:14px 18px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.narr .num{font-family:var(--font-display);font-size:30px;font-weight:700;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums;min-width:44px}
+.narr h2{margin:0 0 4px;font-family:var(--font-display);font-size:19px;font-weight:700;text-wrap:balance}
+.narr p{margin:0;max-width:72ch}
+.narr .focus{margin:8px 0 0;color:var(--muted);font-size:14px}
+.narr .focus b{color:var(--fg)}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.controls button{font:inherit;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;min-width:44px}
+.controls button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.controls button.play{background:var(--accent);color:#fff;border-color:transparent;min-width:120px}
+.controls .speed{display:flex;gap:4px;margin-left:auto}
+.controls .speed button.on{background:var(--fg);color:var(--bg)}
+.progress{display:flex;gap:3px;width:100%;margin-top:4px}
+.progress i{flex:1;height:7px;border-radius:3px;background:var(--line);position:relative;overflow:hidden;cursor:pointer}
+.progress i b{position:absolute;inset:0;width:0;background:var(--accent)}
+.progress i.done b{width:100%;opacity:.55}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;color:var(--muted);font-size:13.5px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,.25)}
+.scenes{margin-top:28px}
+.scenes h3{font-family:var(--font-display);font-size:17px;margin:0 0 10px}
+.scenes ol{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px}
+.scenes li{display:flex;gap:10px;align-items:baseline;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;font-size:14px}
+.scenes li:hover,.scenes li.on{border-color:var(--accent)}
+.scenes li .n{font-family:var(--font-display);color:var(--accent);font-weight:700;min-width:22px;font-variant-numeric:tabular-nums}
+.scenes li .t{font-weight:600}
+.scenes li .d{color:var(--muted);font-size:12.5px;display:block}
+@media (max-width:640px){ .narr{grid-template-columns:1fr} .narr .num{display:none} .menu{grid-template-columns:1fr 1fr} }
+@media (prefers-reduced-motion:reduce){ .cursor{transition:none} .wave.live i,.mic .m.live{animation:none} }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Imperiya: o'yin senariysi</h1>
+      <p>Bitta o'yinning boshidan oxirigacha jonli ko'rinishi. Haqiqiy dunyo geografiyasi, tarixiy davlatlar, hudud speaking/writing mashqlari bilan kengayadi. Xato joyini ko'rsang, sahna raqamini ayt.</p>
+    </div>
+    <div class="counter" id="counter">Sahna 1 / 18</div>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="map"></canvas>
+    <div id="overlay"></div>
+    <div class="toasts" id="toasts"></div>
+    <div class="cursor" id="cursor" hidden>
+      <svg viewBox="0 0 24 24" width="100%" height="100%"><path d="M5 3l14 8-6 1.5L16 19l-3 1.5-3-6.5L5 18z" fill="#fff" stroke="#241d14" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+
+  <div class="narr">
+    <div class="num" id="nnum">1</div>
+    <div>
+      <h2 id="ntitle"></h2>
+      <p id="ntext"></p>
+      <p class="focus" id="nfocus"></p>
+    </div>
+  </div>
+  <div class="controls">
+    <button id="prev" aria-label="Oldingi sahna">◀</button>
+    <button id="play" class="play">▶ Boshlash</button>
+    <button id="next" aria-label="Keyingi sahna">▶|</button>
+    <button id="restart">↺ Sahnani qayta</button>
+    <div class="speed" aria-label="Tezlik"><button data-s="1" class="on">1×</button><button data-s="1.5">1.5×</button><button data-s="2">2×</button></div>
+    <div class="progress" id="progress"></div>
+  </div>
+  <div class="legend">
+    <span><i style="background:#dcc9a0"></i>Tekislik</span><span><i style="background:#a9b07e"></i>O'rmon</span><span><i style="background:#e6cf8a"></i>Cho'l</span><span><i style="background:#9a8468"></i>Tog'</span><span><i style="background:#eceae2"></i>Muz</span><span><i style="background:#4b6f94"></i>Dengiz</span>
+    <span><i style="background:#8c2f28"></i>Siz</span><span><i style="background:#3a8f4a"></i>Ittifoqdosh</span><span><i style="background:#5b2a86"></i>Dushman (urush)</span><span><i style="background:#7d6b55"></i>Boshqalar</span>
+  </div>
+
+  <section class="scenes">
+    <h3>Barcha sahnalar</h3>
+    <ol id="scenelist"></ol>
+  </section>
+</div>
+
+<script>
+'use strict';
+/* ===================== world data ===================== */
+const W=720,H=360,S=4;
+const LAND_RLE=[0,9641,5,30,0,604,5,40,0,33,5,50,0,587,5,50,0,22,5,5,0,4,5,35,0,596,5,50,0,8,5,81,0,8,5,10,0,560,5,1,0,5,5,47,0,7,5,80,0,1,5,20,0,554,5,9,0,4,5,41,0,5,5,101,0,124,5,4,0,1,5,4,0,83,5,11,0,331,5,18,0,9,5,25,0,6,5,97,0,73,5,18,0,40,5,5,0,86,5,14,0,330,5,18,0,1,5,29,0,13,5,94,0,59,5,5,0,3,5,6,0,4,5,13,0,133,5,14,0,309,5,2,0,22,5,15,0,2,5,18,0,18,5,96,0,60,5,19,0,147,5,12,0,3,5,3,0,290,5,3,0,12,5,8,0,4,5,4,0,5,5,12,0,2,5,22,0,11,5,102,0,62,5,17,0,161,5,9,0,305,5,5,0,3,5,6,0,8,5,3,0,6,5,22,0,6,5,107,0,64,5,13,0,4,5,4,0,154,5,8,0,285,5,7,0,27,5,5,0,12,5,4,0,1,5,15,0,13,5,104,0,68,5,7,0,6,5,6,0,432,5,7,0,57,5,17,0,20,5,101,0,66,5,7,0,169,5,7,0,266,5,10,0,14,5,1,0,24,5,11,0,4,5,23,0,15,5,99,0,174,5,5,0,65,5,12,0,261,5,7,0,6,5,5,0,7,5,4,0,11,5,10,0,8,5,5,0,20,5,1,0,23,5,97,0,163,5,14,0,60,5,30,0,260,5,11,0,4,5,7,0,7,5,10,0,9,5,7,0,12,5,3,0,45,5,80,0,156,5,12,0,56,5,43,0,47,5,13,0,197,5,23,0,10,5,6,0,3,5,5,0,3,5,25,0,43,5,78,0,152,5,10,0,54,5,50,0,47,5,15,0,3,5,6,0,195,5,6,0,29,5,4,0,5,5,23,0,45,5,75,0,152,5,8,0,53,5,50,0,54,5,3,0,17,5,3,0,170,5,10,0,126,5,72,0,152,5,7,0,56,5,46,0,253,5,16,0,31,5,1,0,9,5,10,0,8,5,1,0,11,5,1,0,48,5,71,0,148,5,8,0,48,5,63,0,56,5,3,0,186,5,16,0,2,5,1,0,17,5,4,0,6,5,8,0,3,5,9,0,5,5,5,0,3,5,7,0,2,5,7,0,43,5,64,0,154,5,7,0,47,5,77,0,8,5,10,0,27,5,4,0,183,5,13,0,2,5,6,0,1,5,4,0,3,5,2,0,3,5,5,0,6,5,3,0,1,5,7,0,2,5,6,0,6,5,8,0,1,5,10,0,51,5,65,0,150,5,7,0,26,5,7,0,4,5,2,0,10,5,97,0,22,5,5,0,184,5,12,0,2,5,20,0,1,5,6,0,7,5,10,0,2,5,3,0,8,5,19,0,2,5,8,0,41,5,61,0,154,5,6,0,27,5,8,0,4,5,1,0,4,5,5,0,2,5,96,0,21,5,19,0,171,5,10,0,3,5,21,0,1,5,6,0,10,5,7,0,2,5,3,0,8,5,32,0,37,5,66,0,148,5,8,0,25,5,8,0,4,5,3,0,1,5,106,0,6,5,1,0,14,5,21,0,60,5,5,0,41,5,2,0,65,5,4,0,10,5,24,0,16,5,7,0,6,5,37,0,37,5,55,0,1,5,6,0,150,5,7,0,21,5,10,0,3,5,5,0,1,5,106,0,4,5,40,0,55,5,2,0,41,5,10,0,1,5,4,0,68,5,29,0,14,5,9,0,5,5,39,0,31,5,4,0,1,5,54,0,2,5,4,0,92,5,12,0,48,5,7,0,18,5,12,0,3,5,170,0,78,5,28,0,39,5,3,0,27,5,23,0,11,5,10,0,9,5,38,0,27,5,56,0,99,5,15,0,73,5,12,0,2,5,172,0,74,1,43,0,19,1,12,0,2,1,1,0,3,1,3,0,9,1,32,0,4,1,4,0,3,1,6,0,14,1,4,0,4,1,1,0,7,1,20,0,26,1,6,0,1,1,55,0,85,1,24,0,1,1,2,0,56,1,2,0,11,1,11,0,2,1,172,0,21,1,13,0,40,1,50,0,5,1,34,0,6,1,1,0,1,1,25,0,6,1,7,0,3,1,8,0,10,1,8,0,10,1,19,0,32,1,52,0,86,1,33,0,52,1,9,0,6,1,9,0,3,1,189,0,4,1,17,0,2,1,1,0,26,1,103,0,3,1,8,0,6,1,1,0,23,1,8,0,1,1,3,0,6,1,9,0,10,1,15,0,34,1,49,0,88,1,41,0,32,1,2,0,8,1,1,0,3,1,12,0,5,1,8,0,4,1,189,0,1,1,25,0,22,1,104,0,12,1,7,0,13,1,5,0,3,1,13,0,4,1,8,0,16,1,14,0,28,1,47,0,90,1,48,0,9,1,4,0,10,1,5,0,3,1,26,0,1,1,10,0,2,1,211,2,7,0,24,2,101,0,4,2,5,0,3,2,12,0,3,2,25,0,3,2,10,0,9,2,4,0,4,2,17,0,22,2,41,0,95,2,52,0,7,2,6,0,4,2,48,0,4,2,220,0,22,2,165,0,9,2,3,0,6,2,17,0,20,2,41,0,95,2,54,0,6,2,3,0,5,2,49,0,3,2,222,0,1,2,6,0,18,2,160,0,18,2,23,0,17,2,39,0,95,2,55,0,7,2,3,0,2,2,50,0,3,2,232,0,9,2,5,0,3,2,152,0,24,2,12,0,3,2,9,0,17,2,36,0,24,2,3,0,10,2,5,0,55,2,42,0,6,2,6,0,3,2,4,0,1,2,56,0,1,2,215,0,2,2,17,0,5,2,163,0,25,2,12,0,5,2,5,0,20,2,30,0,28,2,19,0,53,2,21,0,4,2,21,0,11,2,33,4,10,2,237,0,7,2,7,0,11,2,160,0,2,2,4,0,12,2,21,0,6,2,2,0,22,2,25,0,36,2,16,0,51,2,20,0,8,2,19,0,10,2,34,4,10,2,236,0,10,2,5,0,12,2,10,0,1,2,147,0,3,2,7,0,8,2,25,0,28,2,23,0,34,2,18,0,51,2,21,0,6,2,21,0,3,2,4,0,4,2,33,4,10,2,235,0,39,2,146,0,3,2,10,0,7,2,1,0,8,2,17,0,26,2,23,0,37,2,13,0,51,2,22,0,5,2,24,0,3,2,40,4,10,2,232,0,42,2,141,0,7,2,6,0,3,2,5,0,16,2,14,0,27,2,21,0,40,2,7,0,53,2,22,0,5,2,69,4,10,2,233,0,22,2,4,0,11,2,145,0,10,2,1,0,26,2,8,0,2,2,5,0,27,2,19,0,99,2,22,0,5,2,71,4,10,2,234,0,32,2,146,0,17,2,3,0,23,2,7,0,3,2,1,0,29,2,16,0,98,2,23,0,6,2,72,4,10,2,235,0,30,2,145,0,18,2,2,0,6,2,1,0,3,2,5,0,2,2,2,0,10,2,4,0,33,2,15,0,96,2,24,0,8,2,71,4,10,2,202,0,3,2,24,0,35,2,145,0,27,2,1,0,3,2,12,0,45,2,14,0,95,2,25,0,8,2,71,4,10,2,194,0,1,2,6,0,3,2,21,0,40,2,143,0,32,2,13,0,45,2,12,0,96,2,24,0,9,2,71,4,10,2,189,0,6,2,4,0,4,2,19,0,43,2,27,0,1,2,7,0,3,2,104,0,33,2,17,0,47,2,6,0,96,2,25,0,8,2,71,4,10,2,187,0,9,2,1,0,5,2,17,0,43,2,3,0,2,2,24,0,2,2,7,0,6,2,101,0,34,2,16,0,49,2,3,0,97,2,27,0,8,2,6,0,6,2,57,4,10,2,186,0,13,2,13,0,3,2,2,0,55,2,18,0,2,2,5,0,17,2,93,0,34,2,16,0,8,2,3,0,139,2,26,0,20,2,57,4,10,2,184,0,14,2,5,0,2,2,1,0,66,2,16,0,5,2,1,0,23,2,90,0,33,2,17,0,7,2,5,0,138,2,9,0,1,2,15,0,11,2,67,4,10,2,165,0,5,2,4,0,5,2,7,0,10,2,6,0,70,2,2,0,3,2,4,0,1,2,7,0,30,2,91,0,29,2,20,0,4,2,7,0,137,2,7,0,4,2,12,0,13,2,67,4,10,2,159,0,36,2,6,0,80,2,7,0,34,2,88,0,31,2,30,0,114,2,4,0,20,2,3,0,7,2,10,0,16,2,65,4,10,2,158,0,35,2,7,0,81,2,4,0,3,2,3,0,37,2,83,0,31,2,30,0,112,2,4,0,31,2,10,0,16,2,65,4,10,2,156,0,34,2,11,0,78,2,4,0,4,2,3,0,39,2,82,0,3,2,1,0,28,2,30,0,111,2,8,0,23,2,2,0,3,2,9,0,10,2,3,0,2,2,66,4,10,2,154,0,35,2,13,0,75,2,4,0,49,2,88,0,25,2,30,0,111,2,7,0,21,2,5,0,4,2,8,0,9,2,72,4,10,2,153,0,35,2,14,0,73,2,4,0,53,2,89,0,21,2,31,0,112,2,5,0,22,2,6,0,3,2,7,0,10,2,72,4,10,2,151,0,36,2,15,0,70,2,6,0,54,2,20,4,34,2,38,0,18,2,33,0,110,2,7,0,20,2,4,0,2,2,3,0,1,2,3,0,13,2,72,4,10,2,149,0,38,2,13,0,70,2,3,0,60,2,19,4,34,2,43,0,11,2,37,0,109,2,7,0,20,2,3,0,3,2,2,0,18,2,71,4,10,2,148,0,39,2,12,0,68,1,3,0,65,1,1,2,16,4,34,2,45,0,6,2,39,1,5,0,99,1,4,0,3,1,7,0,19,1,3,0,14,1,2,0,4,1,74,4,10,1,146,0,41,1,12,0,136,1,1,2,16,4,34,2,45,0,6,2,39,1,6,0,96,1,6,0,6,1,5,0,18,1,5,0,2,1,2,0,5,1,83,4,10,1,150,0,37,1,10,0,133,1,2,0,5,2,15,4,34,2,45,0,7,2,38,1,6,0,95,1,7,0,6,1,6,0,17,1,97,4,10,1,157,0,4,1,1,0,26,1,8,0,134,1,2,0,6,2,14,4,34,2,46,0,6,2,38,1,8,0,93,1,7,0,3,1,9,0,10,1,104,4,10,1,158,0,1,1,3,0,26,1,8,0,135,1,1,0,6,2,14,4,34,2,46,0,7,2,37,1,9,0,92,1,6,0,4,1,12,0,6,1,105,4,10,1,163,0,25,1,5,0,147,2,12,4,34,2,47,0,5,2,38,1,9,0,92,1,5,0,5,1,12,0,5,1,106,4,10,1,162,0,27,1,4,0,147,2,12,4,34,2,49,0,3,2,38,1,7,0,94,1,2,0,7,1,12,0,6,1,274,0,1,1,3,0,27,1,3,0,149,2,11,4,34,2,90,1,4,0,2,1,3,0,103,1,11,0,3,1,275,0,3,1,3,0,26,1,1,0,152,2,10,4,34,2,90,1,1,0,4,1,3,0,102,1,8,0,5,1,278,0,3,1,3,0,177,2,12,4,34,2,78,0,5,2,7,0,5,1,2,0,102,1,2,0,1,1,1,0,10,1,278,0,3,1,4,0,178,2,4,0,1,2,5,4,34,2,76,0,5,2,3,0,10,1,5,0,111,1,281,0,3,1,4,0,180,2,3,0,2,2,3,4,34,2,74,0,10,2,2,0,7,1,10,0,103,1,285,0,3,1,2,0,1,1,2,0,180,2,4,0,2,2,1,4,34,2,72,0,3,2,7,0,10,1,11,0,99,1,3,0,2,1,283,0,4,1,2,0,185,2,1,0,3,2,1,4,34,2,71,0,2,2,7,0,12,1,12,0,97,1,289,0,4,1,1,0,186,2,3,0,1,2,1,4,34,2,70,0,1,2,9,0,11,1,13,0,99,1,19,4,16,1,251,0,5,1,1,0,187,2,4,4,34,2,69,0,1,2,10,0,19,1,1,0,2,1,2,0,101,1,17,4,16,1,250,0,6,1,2,0,186,2,4,4,34,2,82,0,6,2,1,0,13,1,2,0,102,1,16,4,16,1,46,0,2,1,25,0,5,1,171,0,7,1,3,0,185,2,4,4,34,2,81,0,2,2,3,0,2,2,1,0,118,1,15,4,16,1,33,0,4,1,5,0,6,1,22,0,8,1,170,0,8,1,1,0,187,2,4,4,34,2,90,0,118,1,14,4,16,1,32,0,7,1,3,0,5,1,22,0,9,3,30,1,54,3,42,1,43,0,197,2,4,4,34,2,78,0,3,2,7,0,119,1,15,4,13,0,2,4,1,1,31,0,6,1,30,0,8,1,3,3,30,1,54,3,42,1,42,0,10,1,1,0,187,1,4,4,34,1,76,0,3,1,5,0,123,1,15,4,13,0,5,1,28,0,9,1,3,0,5,1,19,0,9,1,3,3,30,1,54,3,42,1,41,0,10,1,3,0,186,1,4,4,34,1,73,0,5,1,3,0,126,1,15,4,5,0,1,4,7,0,5,1,27,0,20,1,17,0,7,1,5,3,30,1,54,3,42,1,40,0,11,1,4,0,3,1,1,0,181,1,4,4,34,1,70,0,8,1,2,0,127,1,19,0,5,1,5,0,5,1,26,0,22,1,1,4,15,0,7,1,4,3,30,4,36,1,18,3,42,1,39,0,12,1,8,0,180,1,5,4,34,1,69,0,123,1,26,0,3,1,2,0,8,1,6,0,7,1,22,0,24,4,15,0,8,1,3,3,30,4,36,1,18,3,42,1,32,0,1,1,4,0,12,1,10,0,180,1,5,4,34,1,68,0,124,1,24,0,12,1,1,0,2,1,7,0,8,1,20,0,27,4,12,0,10,1,1,3,30,4,36,1,18,3,42,1,31,0,17,1,8,0,183,1,5,4,34,1,68,0,124,1,24,0,11,1,2,0,4,1,6,0,9,1,18,0,27,4,13,0,9,1,1,3,30,4,36,1,18,3,42,1,30,0,18,1,3,0,2,1,2,0,185,1,4,4,34,1,70,0,122,1,6,4,10,1,8,0,11,1,2,0,5,1,8,0,7,1,17,0,9,1,7,0,11,4,13,1,1,0,8,1,1,0,2,3,28,4,36,1,18,3,42,1,28,0,20,1,2,0,190,1,4,4,34,1,65,0,127,1,6,4,10,1,6,0,22,1,7,0,6,1,19,0,5,1,11,0,8,4,14,1,2,0,11,3,27,4,36,1,18,3,42,1,27,0,22,1,2,0,188,1,5,4,34,1,64,0,128,1,6,4,10,1,3,0,15,1,3,0,9,1,7,0,4,1,9,0,4,1,3,0,3,1,41,0,7,3,1,0,1,3,28,4,36,1,18,3,42,1,10,0,2,1,15,0,21,1,3,0,188,1,5,4,34,1,62,0,130,1,6,4,10,1,2,0,17,1,3,0,10,1,3,0,3,1,1,0,2,1,6,0,1,1,3,0,5,1,47,0,5,3,30,4,36,1,18,3,42,1,8,0,4,1,13,0,23,1,4,0,188,1,4,4,34,1,62,0,130,1,6,4,10,1,2,0,17,1,2,0,12,1,2,0,7,1,6,0,7,1,7,4,24,1,15,0,8,3,29,4,36,1,18,3,42,1,7,0,4,1,4,0,2,1,6,0,25,1,4,0,188,1,4,4,34,1,59,0,1,1,1,0,130,1,7,4,10,1,2,0,17,1,2,0,13,1,2,0,7,1,6,0,6,1,7,4,24,1,15,0,7,3,30,4,36,1,18,3,42,1,6,0,5,1,2,0,6,1,4,0,25,1,4,0,189,1,3,4,34,1,60,0,131,1,7,4,10,1,2,0,32,1,1,0,8,1,5,0,7,1,7,4,24,1,14,0,10,3,28,4,36,1,18,3,42,1,3,0,15,1,6,0,23,1,4,0,191,1,2,4,34,1,57,0,1,1,2,0,132,1,6,4,10,1,1,0,32,1,2,0,9,1,6,0,5,1,7,4,24,1,14,0,10,3,28,4,36,1,18,3,42,1,4,0,14,1,7,0,22,1,3,0,193,1,1,4,34,1,57,0,1,1,1,0,133,1,6,4,10,1,1,0,26,1,6,0,12,1,3,0,1,1,1,0,6,1,6,4,24,1,14,0,10,3,28,4,36,1,66,0,3,1,1,0,10,1,6,0,19,1,5,0,193,1,1,4,34,1,57,0,135,1,6,4,9,0,21,1,2,0,7,1,4,0,12,1,3,0,9,1,5,4,24,1,17,0,7,3,28,4,36,1,67,0,1,1,5,0,8,1,6,0,14,1,1,0,2,1,6,0,194,4,34,1,58,0,139,1,1,4,8,0,10,1,4,0,1,1,11,0,22,1,2,0,9,1,5,4,9,0,1,4,14,1,6,4,14,0,1,4,3,3,28,1,8,4,56,1,43,0,9,1,7,0,14,1,9,0,194,4,34,1,58,0,140,4,2,0,11,1,20,0,38,1,1,4,1,0,4,4,3,0,4,4,12,1,6,4,18,3,28,1,8,4,56,1,42,0,11,1,6,0,13,1,9,0,196,4,33,1,58,0,140,1,2,0,8,1,24,0,50,4,12,1,6,4,18,1,36,4,56,1,40,0,13,1,6,0,13,1,9,0,197,4,32,1,58,0,140,1,6,0,2,1,26,0,25,1,6,0,13,4,2,0,4,4,12,1,6,4,18,1,36,4,56,1,39,0,14,1,5,0,7,1,16,0,198,1,9,3,22,1,57,0,140,4,23,1,11,0,44,1,2,0,5,1,18,4,18,1,36,4,56,1,39,0,14,1,3,0,8,1,14,0,203,1,7,3,22,1,55,0,141,4,24,1,10,0,51,1,19,4,18,1,36,4,56,1,41,0,21,1,4,0,2,1,1,0,1,1,4,0,209,1,5,3,22,1,53,0,142,4,25,1,12,0,49,1,19,4,18,1,36,4,56,1,41,0,20,1,1,0,3,1,4,0,2,1,1,0,213,1,3,3,22,1,52,0,141,1,1,4,26,1,12,0,48,1,20,4,18,1,36,4,56,1,41,0,18,1,5,0,1,1,2,0,219,1,2,3,22,1,50,0,142,1,2,4,26,1,17,0,15,1,2,0,26,1,20,4,18,1,36,4,56,1,42,0,17,1,5,0,222,1,2,3,22,1,49,0,142,1,3,4,26,1,21,0,9,1,6,0,24,1,20,4,18,1,36,4,56,1,43,0,18,1,2,0,223,1,2,3,2,0,1,3,19,1,48,0,143,1,3,4,26,1,21,0,9,1,10,0,19,1,21,4,18,1,36,4,56,1,44,0,17,1,2,0,224,1,1,3,2,0,3,3,17,1,47,0,143,1,4,4,26,1,23,0,7,1,15,0,5,1,4,0,5,1,21,4,18,1,36,4,56,1,44,0,17,1,1,0,226,3,3,0,3,3,16,1,47,0,144,3,3,4,26,3,26,0,4,3,50,4,18,3,8,1,28,4,56,1,43,0,245,3,3,0,3,3,16,1,31,0,7,1,9,0,144,3,3,4,26,3,80,4,18,3,8,1,28,4,56,1,43,0,246,1,2,0,4,1,38,0,1,1,7,0,8,1,1,0,3,1,5,0,143,3,109,4,6,0,5,4,7,3,8,1,20,3,8,4,56,1,44,0,246,1,2,0,3,1,35,0,8,1,2,0,14,1,4,0,142,3,89,0,1,3,20,4,6,0,5,4,7,3,8,1,20,3,8,4,56,1,44,0,247,1,2,0,3,1,33,0,25,1,5,0,139,3,87,0,1,3,3,0,1,3,20,4,7,0,5,4,6,3,8,1,20,3,8,4,56,1,44,0,248,1,2,0,3,1,30,0,28,1,4,0,138,3,89,0,1,3,23,4,7,0,6,4,5,3,8,1,20,3,8,4,56,1,43,0,247,1,5,0,4,1,27,0,28,1,5,0,135,3,93,0,4,3,27,0,6,3,12,1,20,3,8,4,56,1,42,0,249,1,4,0,4,1,26,0,30,1,5,0,133,3,94,0,4,3,28,0,7,3,10,1,20,3,8,4,56,1,41,0,252,1,4,0,3,1,25,0,30,1,5,0,2,1,2,0,129,3,95,0,4,3,28,0,7,3,4,0,3,3,2,1,20,3,12,1,92,0,255,1,2,0,4,1,24,0,31,1,4,0,5,1,1,0,125,3,97,0,5,3,27,0,12,3,1,0,1,3,2,1,20,3,12,1,92,0,256,1,1,0,4,1,25,0,31,1,3,0,131,3,98,0,4,3,27,0,2,3,1,0,9,3,1,0,2,3,1,1,20,3,12,1,91,0,257,1,2,0,5,1,22,0,33,1,1,0,131,3,99,0,5,3,27,0,1,3,1,0,7,3,3,0,8,1,8,0,4,1,3,3,12,1,90,0,258,1,3,0,5,1,21,0,38,1,2,0,125,3,100,0,4,3,29,0,6,3,4,0,21,1,2,3,12,1,90,0,4,1,2,0,253,1,3,0,5,1,20,0,39,1,1,0,124,3,102,0,4,3,29,0,4,3,6,0,21,1,1,3,12,1,88,0,5,1,2,0,256,1,2,0,5,1,19,0,39,1,1,0,123,3,103,0,6,3,39,0,20,1,99,0,5,1,3,0,257,1,1,0,6,1,17,0,164,3,103,0,6,3,39,1,2,0,20,1,95,0,7,1,3,0,265,1,16,0,28,1,9,0,126,3,105,0,6,3,38,1,3,0,20,1,42,0,2,1,48,0,10,1,1,0,267,1,15,0,27,1,2,0,3,1,8,0,123,3,106,0,5,3,38,1,4,0,19,1,42,0,3,1,43,0,14,1,1,0,267,1,16,0,35,1,5,0,121,3,108,0,4,3,38,1,3,0,20,1,39,0,6,1,41,0,284,1,16,0,16,1,5,0,17,1,4,0,119,3,108,0,4,3,38,1,2,0,22,1,34,0,10,1,31,0,5,1,1,0,186,1,1,0,101,1,17,0,13,1,7,0,18,1,5,0,117,3,108,0,5,3,37,1,1,0,29,1,28,0,11,1,29,0,5,1,2,0,288,1,17,0,13,1,6,0,20,1,7,0,115,3,107,0,6,3,36,0,30,1,27,0,12,1,28,0,195,1,2,0,99,1,18,0,12,1,6,0,28,1,3,0,1,1,2,0,108,3,107,0,7,3,34,0,31,1,25,0,16,1,25,0,6,1,4,0,186,1,2,0,100,1,18,0,10,1,7,0,29,1,8,0,105,3,108,0,7,3,34,0,30,1,24,0,17,1,24,0,6,1,4,0,291,1,17,0,7,1,9,0,30,1,8,0,105,3,107,0,7,3,32,0,32,1,23,0,19,1,24,0,5,1,4,0,292,1,18,0,1,1,12,0,19,1,4,0,4,1,7,0,1,1,1,0,2,1,1,0,3,1,3,0,99,3,108,0,7,3,30,0,33,1,22,0,21,1,23,0,29,1,4,0,271,1,28,0,21,1,1,0,122,3,109,0,7,3,27,0,35,1,21,0,22,1,24,0,28,1,3,0,274,1,25,0,144,3,111,0,7,3,26,0,36,1,18,0,24,1,25,0,27,1,4,0,275,1,23,0,144,3,111,0,7,3,22,0,40,1,17,0,25,1,5,0,1,1,20,0,26,1,4,0,278,1,20,0,144,3,111,0,8,3,19,0,42,1,16,0,25,1,4,0,3,1,21,0,25,1,3,0,282,1,2,0,5,1,10,0,1,1,8,0,135,3,112,0,6,3,19,0,43,1,14,0,29,1,1,0,4,1,22,0,23,1,3,0,291,1,19,0,133,3,114,0,6,3,17,0,45,1,12,0,35,1,23,0,22,1,3,0,292,1,18,0,132,1,105,3,12,0,4,3,13,0,50,1,11,0,36,1,22,0,23,1,2,0,293,1,18,0,132,1,104,3,13,0,3,3,12,0,51,1,11,0,36,1,22,0,23,1,3,0,1,1,1,0,294,1,13,0,133,1,106,4,8,1,4,0,3,1,8,0,54,1,11,0,36,1,23,0,23,1,6,0,294,1,2,0,1,1,8,0,133,1,106,4,8,1,5,0,1,1,5,0,59,1,11,0,36,1,3,0,2,1,17,0,22,1,2,0,3,1,2,0,297,1,8,0,133,1,106,4,8,1,6,0,1,1,3,0,60,1,10,0,37,1,3,0,2,1,17,0,23,1,1,0,4,1,1,0,298,1,7,0,23,1,1,0,110,1,105,4,8,1,7,0,63,1,10,0,37,1,3,0,5,1,13,0,24,1,1,0,6,1,2,0,296,1,6,0,22,1,2,0,2,1,2,0,106,1,105,4,8,1,6,0,15,1,1,0,49,1,9,0,37,1,3,0,6,1,12,0,32,1,1,0,297,1,4,0,20,1,4,0,3,1,4,0,106,1,103,4,8,1,7,0,9,1,6,0,50,1,8,0,37,1,2,0,7,1,11,0,27,1,2,0,3,1,2,0,298,1,4,0,16,1,15,0,13,1,1,0,92,1,102,4,8,1,8,0,4,1,10,0,50,1,8,0,37,1,2,0,8,1,9,0,22,1,1,0,5,1,1,0,1,1,2,0,300,1,5,0,16,1,7,0,1,1,12,0,2,1,4,0,1,1,2,0,93,1,101,4,8,1,22,0,50,1,7,0,38,1,2,0,10,1,5,0,24,1,1,0,7,1,2,0,301,1,1,0,1,1,4,0,14,1,7,0,2,1,19,0,95,1,100,4,8,1,21,0,52,1,5,0,39,1,1,0,12,1,3,0,24,1,1,0,7,1,2,0,305,1,4,0,4,1,4,0,4,1,8,0,2,1,20,0,95,1,99,4,8,1,21,0,52,1,5,0,2,1,2,0,35,1,1,0,12,1,2,0,24,1,1,0,14,1,1,0,301,1,8,0,2,1,2,0,2,1,32,0,95,1,98,4,8,1,21,0,52,1,3,0,4,1,2,0,34,1,4,0,10,1,1,0,38,1,4,0,302,1,4,0,5,1,37,0,93,1,98,4,8,1,20,0,55,1,1,0,3,1,4,0,33,1,5,0,45,1,7,0,304,1,3,0,3,1,39,0,92,1,98,4,8,1,20,0,60,1,3,0,35,1,3,0,43,1,9,0,305,1,1,0,5,1,39,0,92,1,97,4,8,1,19,0,61,1,3,0,36,1,2,0,43,1,1,0,3,1,5,0,312,1,39,0,93,1,95,4,8,1,19,0,61,1,3,0,37,1,3,0,30,1,2,0,13,1,3,0,1,1,1,0,312,1,40,0,93,1,27,0,4,1,63,4,8,1,18,0,62,1,3,0,37,1,4,0,29,1,2,0,13,1,3,0,314,1,47,0,88,1,21,0,9,1,88,0,103,1,4,0,27,1,5,0,13,1,1,0,314,1,50,0,86,1,18,0,11,1,87,0,94,1,4,0,5,1,6,0,24,1,8,0,327,1,3,4,18,2,30,0,86,1,5,0,24,1,13,2,36,1,36,0,95,1,5,0,5,1,6,0,22,1,8,0,328,1,3,4,18,2,31,0,121,1,6,2,36,1,36,0,96,1,5,0,4,1,6,0,21,1,8,0,330,1,2,4,18,2,32,0,121,1,5,2,36,1,35,0,98,1,5,0,4,1,5,0,20,1,8,0,330,1,3,4,18,2,32,0,121,1,5,2,36,1,34,0,100,1,5,0,4,1,4,0,19,1,9,0,329,1,4,4,18,2,32,0,121,1,5,2,36,1,33,0,102,1,5,0,3,1,4,0,16,1,12,0,328,1,5,4,18,2,33,0,120,1,5,2,36,1,32,0,104,1,5,0,3,1,4,0,15,1,13,0,327,1,5,4,18,2,34,0,119,1,5,2,36,1,30,0,107,1,7,0,2,1,2,0,11,1,1,0,2,1,14,0,19,1,1,0,306,1,6,4,18,2,34,0,119,1,5,2,36,1,29,0,109,1,7,0,2,1,1,0,10,1,19,0,12,1,1,0,5,1,2,0,303,1,8,4,18,2,34,0,119,1,5,2,36,1,27,0,111,1,8,0,12,1,18,0,4,1,9,0,6,1,2,0,303,1,8,4,18,2,33,0,120,1,5,2,36,1,26,0,112,1,9,0,11,1,17,0,5,1,1,0,14,1,1,0,303,1,9,4,18,2,34,1,3,0,115,1,6,2,36,1,25,0,114,1,8,0,11,1,17,0,4,1,1,0,15,1,1,0,303,1,9,4,18,2,34,1,3,0,1,1,2,0,112,1,6,2,36,1,24,0,116,1,7,0,12,1,16,0,4,1,2,0,4,1,2,0,9,1,1,0,6,1,5,0,290,1,10,4,18,2,34,1,9,0,109,1,6,2,36,1,24,0,117,1,8,0,10,1,15,0,5,1,6,0,17,1,6,0,290,1,10,4,18,2,34,1,11,0,107,1,6,2,36,1,23,0,118,1,8,0,11,1,13,0,6,1,5,0,20,1,4,0,7,1,2,0,281,1,10,4,18,2,34,1,11,0,108,1,5,2,36,1,22,0,120,1,8,0,10,1,13,0,5,1,6,0,23,1,2,0,4,1,6,0,281,1,8,4,18,2,34,1,16,0,104,1,4,2,36,1,20,0,123,1,9,0,8,1,13,0,5,1,3,0,1,1,2,0,20,1,5,0,3,1,11,0,18,1,2,0,257,1,8,4,18,2,34,1,21,0,100,1,3,2,36,1,20,0,124,1,8,0,12,1,2,0,1,1,6,0,5,1,3,0,1,1,3,0,7,1,2,0,2,1,5,0,4,1,20,0,18,1,1,0,255,1,9,4,18,2,34,1,23,0,99,1,2,2,36,1,20,0,125,1,7,0,17,1,3,0,7,1,2,0,1,1,3,0,8,1,1,0,7,1,1,0,4,1,1,0,1,1,20,0,270,1,10,4,18,2,34,1,24,0,99,1,1,2,36,1,19,0,126,1,7,0,27,1,2,0,2,1,3,0,24,1,20,0,13,1,3,0,251,1,11,4,18,2,34,1,25,0,98,1,1,2,36,1,18,0,129,1,5,0,27,1,2,0,2,1,1,0,1,1,1,0,27,1,18,0,12,1,2,0,253,1,10,4,18,2,34,1,29,0,95,1,54,0,130,1,4,0,27,1,2,0,4,1,1,0,29,1,17,0,10,1,2,0,254,1,10,4,18,2,34,1,30,0,94,1,54,0,131,1,3,0,64,1,17,0,4,1,6,0,6,1,1,0,248,1,10,4,18,2,34,1,30,0,94,1,54,0,134,1,4,0,52,1,1,0,8,1,18,0,4,1,2,0,9,1,1,0,248,1,9,4,18,2,34,1,30,0,95,1,54,0,132,1,6,0,4,1,3,0,44,1,1,0,8,1,17,0,17,1,1,0,1,1,1,0,247,1,7,4,18,2,34,1,30,0,96,1,53,0,134,1,13,0,51,1,17,0,20,1,1,0,246,1,7,4,18,2,34,1,30,0,96,1,52,0,138,1,1,0,2,1,10,0,47,1,13,0,1,1,5,0,22,1,1,0,244,1,6,4,18,2,34,1,30,0,96,1,52,0,145,1,8,0,14,1,1,0,29,1,3,0,2,1,7,0,5,1,4,0,23,1,1,0,242,1,6,4,18,2,34,1,30,0,96,1,53,0,155,1,4,0,2,1,4,0,6,1,4,0,27,1,6,0,6,1,4,0,24,1,1,0,241,1,5,4,18,2,34,1,29,0,97,1,53,0,169,1,3,0,34,1,1,0,8,1,5,0,23,1,1,0,240,1,5,4,18,2,34,1,29,0,97,1,54,0,159,1,2,0,6,1,3,0,45,1,5,0,20,1,2,0,242,1,4,4,18,1,62,0,99,1,53,0,167,1,1,0,49,1,4,0,263,1,4,4,18,1,60,0,101,1,54,0,242,1,2,0,240,1,3,4,18,1,60,0,101,1,54,0,183,1,1,0,19,1,2,0,279,1,3,4,18,1,59,0,102,1,54,0,184,1,2,0,17,1,2,0,280,1,2,4,18,1,58,0,103,1,54,0,17,1,1,0,163,1,1,0,1,1,10,0,10,1,2,0,280,1,2,4,18,1,58,0,102,1,55,0,17,1,1,0,162,1,13,0,10,1,3,0,280,1,1,4,18,1,57,0,102,1,56,0,16,1,3,0,161,1,12,0,10,1,4,0,280,1,1,4,18,1,56,0,103,1,56,0,16,1,3,0,160,1,12,0,11,1,4,0,281,4,18,1,56,0,102,1,57,0,15,1,4,0,151,1,5,0,3,1,13,0,11,1,5,0,280,4,18,1,56,0,102,1,58,0,13,1,5,0,150,1,6,0,3,1,12,0,12,1,7,0,43,1,1,0,235,4,17,1,56,0,102,1,57,0,13,1,7,0,148,1,23,0,11,1,8,0,42,1,1,0,237,4,15,1,56,0,102,1,57,0,12,1,6,0,1,1,1,0,148,1,25,0,9,1,8,0,282,4,13,1,56,0,101,1,57,0,9,1,11,0,147,1,1,0,1,1,26,0,8,1,8,0,43,1,1,0,24,1,1,0,215,4,11,1,56,0,101,1,56,0,10,1,11,0,145,1,1,0,1,1,29,0,6,1,9,0,66,1,2,0,218,4,9,1,56,0,101,1,53,0,12,1,11,0,146,1,33,0,4,1,10,0,285,4,9,1,56,0,102,1,50,0,14,1,11,0,146,1,47,0,63,1,2,0,222,4,7,1,55,0,103,1,49,0,15,1,11,0,145,1,48,0,287,4,7,1,55,0,104,1,47,0,16,1,10,0,145,1,50,0,287,4,6,1,55,0,104,1,46,0,18,1,9,0,145,1,51,0,286,4,6,1,54,0,106,1,44,0,19,1,9,0,143,1,55,0,284,4,6,1,53,0,107,1,10,3,16,1,17,0,20,1,8,0,141,1,2,3,40,1,17,0,31,1,1,0,251,4,6,1,53,0,108,1,9,3,16,1,18,0,18,1,9,0,136,1,7,3,40,1,18,0,31,1,2,0,249,4,6,1,52,0,109,1,9,3,16,1,18,0,17,1,10,0,134,1,9,3,40,1,19,0,31,1,2,0,248,4,6,1,52,0,110,1,8,3,16,1,19,0,16,1,9,0,134,1,10,3,40,1,19,0,32,1,2,0,247,4,6,1,51,0,112,1,7,3,16,1,19,0,16,1,9,0,133,1,11,3,40,1,19,0,34,1,1,0,245,4,7,1,50,0,113,1,7,3,16,1,19,0,16,1,9,0,132,1,12,3,40,1,22,0,277,4,7,1,46,0,117,1,7,3,16,1,19,0,16,1,8,0,133,1,12,3,40,1,22,0,277,4,7,1,43,0,120,1,7,3,16,1,19,0,16,1,8,0,132,1,13,3,40,1,22,0,277,4,7,1,41,0,122,1,7,3,16,1,19,0,16,1,8,0,132,1,13,3,40,1,24,0,275,4,7,1,39,0,124,1,7,3,16,1,17,0,19,1,6,0,133,1,13,3,40,1,25,0,274,4,7,1,38,0,125,1,7,3,16,1,15,0,22,1,3,0,136,1,12,3,40,1,26,0,273,4,7,1,37,0,127,1,6,3,16,1,13,0,163,1,12,3,40,1,26,0,272,4,8,1,37,0,127,1,6,3,16,1,14,0,161,1,13,3,40,1,26,0,272,4,8,1,37,0,127,1,6,3,16,1,14,0,161,1,13,3,40,1,26,0,272,4,8,1,37,0,128,1,5,3,16,1,13,0,163,1,12,3,40,1,26,0,272,4,8,1,37,0,128,1,5,3,16,1,13,0,163,1,12,3,40,1,27,0,271,4,8,1,37,0,129,1,33,0,164,1,11,3,40,1,27,0,270,4,9,1,36,0,131,1,31,0,165,1,11,3,40,1,27,0,270,4,9,1,35,0,132,1,30,0,167,1,10,3,40,1,27,0,270,4,9,1,34,0,134,1,28,0,168,1,10,3,40,1,27,0,270,4,9,1,34,0,135,1,26,0,169,1,76,0,271,4,9,1,33,0,136,1,26,0,169,1,76,0,271,4,9,1,32,0,138,1,24,0,171,1,75,0,271,4,9,1,31,0,139,1,23,0,172,1,27,0,6,1,42,0,271,4,9,1,29,0,141,1,22,0,174,1,20,0,1,1,1,0,13,1,38,0,272,4,9,1,29,0,141,1,20,0,175,1,19,0,18,1,36,0,273,4,9,1,28,0,142,1,19,0,176,1,17,0,21,1,6,0,1,1,27,0,273,4,10,1,27,0,143,1,16,0,178,1,18,0,22,1,4,0,2,1,27,0,273,4,10,1,17,0,1,1,9,0,144,1,6,0,187,1,9,0,31,1,3,0,2,1,27,0,274,4,10,1,18,0,3,1,4,0,148,1,1,0,192,1,5,0,34,1,1,0,3,1,1,0,1,1,25,0,44,1,1,0,228,4,11,1,19,0,392,1,24,0,45,1,3,0,226,4,11,1,19,0,393,1,23,0,46,1,2,0,225,4,12,1,20,0,393,1,21,0,48,1,1,0,225,4,12,1,20,0,394,1,20,0,49,1,1,0,223,4,13,1,20,0,394,1,20,0,49,1,3,0,221,4,13,1,19,0,396,1,18,0,50,1,4,0,3,1,1,0,216,4,13,1,18,0,399,1,6,0,1,1,5,0,54,1,8,0,216,4,13,1,15,0,411,1,1,0,56,1,7,0,218,4,12,1,10,0,472,1,6,0,219,4,13,1,10,0,473,1,5,0,219,1,22,0,475,1,4,0,218,1,23,0,414,1,1,0,55,1,1,0,4,1,3,0,219,1,18,0,420,1,7,0,47,1,2,0,1,1,1,0,1,1,3,0,220,1,18,0,420,1,7,0,46,1,5,0,224,1,1,0,1,1,17,0,1,1,1,0,418,1,5,0,47,1,5,0,224,1,1,0,1,1,18,0,419,1,5,0,46,1,5,0,225,1,1,0,1,1,16,0,422,1,3,0,45,1,6,0,228,1,16,0,469,1,7,0,225,1,1,0,2,1,15,0,467,1,7,0,228,1,18,0,466,1,7,0,229,1,15,0,468,1,8,0,229,1,14,0,468,1,8,0,229,1,15,0,469,1,6,0,230,1,16,0,705,1,18,0,701,1,18,0,701,1,19,0,701,1,17,0,703,1,16,0,272,1,4,0,428,1,16,0,272,1,2,0,430,1,14,0,707,1,12,0,708,1,12,0,20,1,1,0,687,1,12,0,16,1,6,0,686,1,13,0,15,1,1,0,693,1,7,0,1,1,3,0,709,1,1,0,1,1,4,0,1,1,5,0,709,1,2,0,1,1,2,0,1,1,5,0,711,1,11,0,711,1,13,0,710,1,6,0,12255,5,4,0,712,5,3,0,1,5,1,0,711,5,3,0,716,5,3,0,715,5,5,0,330,5,2,0,63,5,2,0,316,5,7,0,229,5,10,0,89,5,7,0,13,5,6,0,40,5,3,0,314,5,6,0,230,5,13,0,60,5,2,0,24,5,11,0,8,5,14,0,10,5,13,0,1,5,15,0,312,5,5,0,227,5,20,0,48,5,1,0,3,5,22,0,2,5,46,0,1,5,52,0,293,5,4,0,223,5,30,0,5,5,5,0,30,5,131,0,292,5,4,0,219,5,50,0,21,5,137,0,288,5,7,0,196,5,3,0,13,5,56,0,18,5,146,0,5,5,2,0,267,5,4,0,2,5,11,0,192,5,9,0,5,5,59,0,17,5,157,0,264,5,4,0,2,5,12,0,187,5,15,0,1,5,61,0,12,5,168,0,258,5,5,0,1,5,12,0,139,5,6,0,5,5,5,0,1,5,12,0,15,5,78,0,11,5,175,0,254,5,7,0,1,5,12,0,133,5,12,0,2,5,115,0,8,5,183,0,243,5,11,0,2,5,12,0,108,5,4,0,6,5,4,0,3,5,135,0,7,5,195,0,177,5,1,0,53,5,13,0,3,5,11,0,101,5,158,0,7,5,199,0,174,5,11,0,44,5,3,0,2,5,5,0,5,5,12,0,98,5,163,0,1,5,202,0,171,5,1,0,27,5,1,0,42,5,14,0,95,5,368,0,172,5,11,0,9,5,3,0,4,5,9,0,10,5,1,0,17,5,22,0,90,5,371,0,129,5,2,0,4,5,7,0,32,5,42,0,1,5,10,0,4,5,27,0,89,5,370,0,145,5,12,0,24,5,79,0,92,5,365,0,111,5,55,0,19,5,74,0,94,5,364,0,104,5,83,0,1,5,72,0,93,5,365,0,98,5,159,0,93,5,369,0,100,5,152,0,92,5,375,0,97,5,142,0,96,5,385,0,76,5,3,0,2,5,5,0,6,5,150,0,90,5,389,0,76,5,168,0,82,5,394,0,77,5,161,0,56,5,9,0,18,5,402,0,62,5,7,0,8,5,156,0,56,5,13,0,15,5,406,0,61,5,6,0,14,5,149,0,55,5,14,0,15,5,395,0,102,5,142,0,31,5,1,0,18,5,16,0,28,5,381,0,105,5,142,0,28,5,4,0,11,5,19,0,32,5,378,0,104,5,153,0,12,5,10,0,13,5,12,0,31,5,384,0,88,5,10,0,2,5,163,0,62,5,397,0,89,5,183,0,26,5,7,0,8,5,409,0,90,5,185,0,14,5,433,0,88,5,188,0,5,5,444,0,82,5,643,0,78,5,645,0,23,5,1,0,4,5,2,0,4,5,10,0,37,5,646,0,4,5,3,0,7,5,30,0,44,5,686,0,7,5,9,0,14,5,7130];
+const terrain=new Uint8Array(W*H);{let i=0;for(let k=0;k<LAND_RLE.length;k+=2){const v=LAND_RLE[k],n=LAND_RLE[k+1];terrain.fill(v,i,i+n);i+=n;}}
+const TCOL=[[75,111,148],[220,201,160],[169,176,126],[230,207,138],[154,132,104],[236,234,226]];
+const g=(lon,lat)=>[((Math.floor((lon+180)*2)%W)+W)%W,Math.min(H-1,Math.max(0,Math.floor((90-lat)*2)))];
+const CITIES=[
+ ['Samarqand',66.97,39.65,'madrasa'],['Buxoro',64.42,39.77,'madrasa'],['Xiva',60.36,41.38,'karvonsaroy'],['O‘tror',68.3,42.85,'karvonsaroy'],
+ ['Hirot',62.2,34.34,'qal’a'],['Isfahon',51.68,32.65,'madrasa'],['Tabriz',46.3,38.08,'karvonsaroy'],['Bag‘dod',44.4,33.3,'madrasa'],
+ ['Konstantinopol',28.97,41.0,'qal’a'],['Qohira',31.24,30.05,'madrasa'],['Damashq',36.3,33.5,'karvonsaroy'],['Makka',39.8,21.4,'madrasa'],
+ ['Dehli',77.2,28.6,'qal’a'],['Vijayanagar',76.46,15.33,'qal’a'],['Qashqar',75.99,39.47,'karvonsaroy'],['Qoraqurum',102.85,47.2,'karvonsaroy'],
+ ['Xonbaliq',116.4,39.9,'qal’a'],['Xanchjou',120.17,30.25,'karvonsaroy'],['Kioto',135.77,35.0,'qal’a'],['Malakka',102.25,2.2,'karvonsaroy'],
+ ['Venetsiya',12.33,45.44,'karvonsaroy'],['Rim',12.5,41.9,'madrasa'],['Parij',2.35,48.85,'qal’a'],['London',-0.12,51.5,'qal’a'],['Kordova',-4.78,37.88,'madrasa'],
+ ['Novgorod',31.3,58.5,'karvonsaroy'],['Saroy',46.5,47.4,'karvonsaroy'],['Timbuktu',-3.0,16.77,'madrasa'],['Kilva',39.5,-8.96,'karvonsaroy'],['Aksum',38.72,14.12,'qal’a'],
+ ['Tenochtitlan',-99.13,19.43,'qal’a'],['Kusko',-71.97,-13.52,'qal’a'],['Kaxokiya',-90.06,38.65,'karvonsaroy'],['Buyuk Zimbabve',30.93,-20.27,'qal’a'],['Urganch',60.63,41.55,'qal’a']
+];
+const CITY_ICON={madrasa:'◆',karvonsaroy:'▲','qal’a':'■'};
+// players: name, color, home city, size, troops, kind(human/bot), rel
+const PDEF=[
+ {n:'Temuriylar',c:[140,47,40],home:'Samarqand',size:0,troops:0,kind:'human',rel:'you'},
+ {n:'Oltin O‘rda',c:[58,143,74],home:'Saroy',size:420,troops:260,kind:'human',rel:'neutral',focus:g(58,47)},
+ {n:'Safaviylar',c:[91,42,134],home:'Isfahon',size:380,troops:310,kind:'human',rel:'neutral',focus:g(58,34)},
+ {n:'Mo‘g‘ul ulusi',c:[125,107,85],home:'Qashqar',size:620,troops:90,kind:'human',rel:'neutral',focus:g(95,48)},
+ {n:'Xorazm',c:[150,120,60],home:'Urganch',size:28,troops:20,kind:'bot',rel:'neutral'},
+ {n:'Usmoniylar',c:[120,80,60],home:'Konstantinopol',size:300,troops:280,kind:'bot'},
+ {n:'Mamluklar',c:[110,100,70],home:'Qohira',size:260,troops:210,kind:'bot'},
+ {n:'Dehli sultonligi',c:[130,95,80],home:'Dehli',size:300,troops:190,kind:'bot'},
+ {n:'Min sulolasi',c:[100,90,90],home:'Xonbaliq',size:700,troops:520,kind:'bot',focus:g(120,30)},
+ {n:'Vijayanagar',c:[140,110,70],home:'Vijayanagar',size:120,troops:140,kind:'bot'},
+ {n:'Mali',c:[120,105,60],home:'Timbuktu',size:260,troops:120,kind:'bot'},
+ {n:'Venetsiya',c:[105,95,110],home:'Venetsiya',size:40,troops:160,kind:'bot'},
+ {n:'Fransiya',c:[95,100,120],home:'Parij',size:110,troops:150,kind:'bot'},
+ {n:'Angliya',c:[115,90,95],home:'London',size:60,troops:120,kind:'bot'},
+ {n:'Kastiliya',c:[130,100,90],home:'Kordova',size:90,troops:110,kind:'bot'},
+ {n:'Novgorod',c:[100,110,100],home:'Novgorod',size:260,troops:90,kind:'bot'},
+ {n:'Jaloyirlar',c:[120,110,80],home:'Bag‘dod',size:90,troops:80,kind:'bot'},
+ {n:'Ashikaga',c:[110,95,105],home:'Kioto',size:60,troops:130,kind:'bot'},
+ {n:'Majapahit',c:[105,115,85],home:'Malakka',size:110,troops:90,kind:'bot'},
+ {n:'Aztek',c:[125,100,75],home:'Tenochtitlan',size:120,troops:170,kind:'bot'},
+ {n:'Inka',c:[115,105,80],home:'Kusko',size:220,troops:140,kind:'bot'},
+ {n:'Kaxokiya',c:[110,105,90],home:'Kaxokiya',size:140,troops:60,kind:'bot'},
+ {n:'Kilva',c:[120,100,95],home:'Kilva',size:60,troops:50,kind:'bot'},
+ {n:'Habashiston',c:[130,110,85],home:'Aksum',size:120,troops:100,kind:'bot'},
+ {n:'Zimbabve',c:[115,100,70],home:'Buyuk Zimbabve',size:120,troops:70,kind:'bot'},
+ {n:'Qoraqo‘yunli',c:[120,90,90],home:'Tabriz',size:70,troops:110,kind:'bot'}
+];
+const cityByName=Object.fromEntries(CITIES.map(c=>[c[0],c]));
+
+/* ===================== simulation ===================== */
+let owner,players,game;
+const YOU=1,ALLY=2,ENEMY=3,BIG=4,SMALL=5;
+const you=()=>players[YOU];
+function passable(i){const t=terrain[i];return t>0&&t<5}
+function nb(i,out){const x=i%W,y=(i-x)/W;out[0]=y*W+((x+1)%W);out[1]=y*W+((x-1+W)%W);out[2]=y>0?i-W:-1;out[3]=y<H-1?i+W:-1;}
+function setOwner(i,pid){const o=owner[i];if(o===pid)return;if(o&&players[o])players[o].cells--;owner[i]=pid;if(pid&&players[pid])players[pid].cells++;}
+function grow(pid,count,target=0,focus=null,rng=Math.random){
+  const fr=[],seen=new Uint8Array(W*H),n=[0,0,0,0];
+  for(let i=0;i<W*H;i++)if(owner[i]===pid){nb(i,n);for(const j of n)if(j>=0&&!seen[j]&&owner[j]===target&&passable(j)){seen[j]=1;fr.push(j);}}
+  if(!fr.length&&!players[pid].cells){const h=players[pid].homeIdx;if(owner[h]===target){seen[h]=1;fr.push(h);}}
+  let cap=0;
+  while(cap<count&&fr.length){
+    let k=0;
+    if(focus){let best=1e9;for(let q=0;q<fr.length;q++){const x=fr[q]%W,y=(fr[q]-x)/W;const d=((x-focus[0])**2+(y-focus[1])**2)*(1+rng()*rng()*2.5);if(d<best){best=d;k=q;}}}
+    else k=(rng()*fr.length)|0;
+    const j=fr[k];fr[k]=fr[fr.length-1];fr.pop();
+    if(owner[j]!==target)continue;
+    setOwner(j,pid);cap++;
+    nb(j,n);for(const m of n)if(m>=0&&!seen[m]&&owner[m]===target&&passable(m)){seen[m]=1;fr.push(m);}
+  }
+  return cap;
+}
+function seeded(s){return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;}}
+function buildWorld(){
+  owner=new Uint16Array(W*H);players=[null];
+  const rng=seeded(7);
+  PDEF.forEach((d,k)=>{const c=cityByName[d.home];const [x,y]=g(c[1],c[2]);players.push({id:k+1,name:d.n,col:d.c,home:[x,y],homeIdx:y*W+x,cells:0,troops:d.troops,score:0,kind:d.kind,rel:d.rel||'neutral',alive:true,atWar:false});});
+  // small neighbour first, then reserve a ring around Samarkand so the player's start stays free
+  grow(SMALL,PDEF[SMALL-1].size*S,0,null,rng);
+  const RES=65535,[sx,sy]=g(66.97,39.65);const res=[];
+  for(let i=0;i<W*H;i++){if(owner[i])continue;const x=i%W,y=(i-x)/W;if((x-sx)**2+(y-sy)**2<=13*13){owner[i]=RES;res.push(i);}}
+  const order=[ENEMY,ALLY,BIG].concat(players.filter(p=>p&&![YOU,SMALL,ENEMY,ALLY,BIG].includes(p.id)).map(p=>p.id));
+  for(const id of order){const d=PDEF[id-1];if(d.size)grow(id,d.size*S,0,d.focus||null,rng);}
+  for(const i of res)owner[i]=0;
+  game={time:0,placed:false,level:'A2',ex:{w:0,wOk:0,s:0,sOk:0},missed:[],madrasa:false,treaty:false};
+}
+
+/* ===================== rendering ===================== */
+const stage=document.getElementById('stage'),canvas=document.getElementById('map'),ctx=canvas.getContext('2d');
+const off=document.createElement('canvas');off.width=W;off.height=H;const octx=off.getContext('2d');const img=octx.createImageData(W,H);
+const cam={cx:360,cy:150,z:1.3};let camAnim=null;
+const RELCOL={you:[140,47,40],ally:[58,143,74],enemy:[91,42,134]};
+let flashEnemy=0;
+function compose(){
+  const d=img.data,n=[0,0,0,0];const cent=players.map(()=>[0,0,0]);
+  for(let i=0;i<W*H;i++){
+    const t=terrain[i];let r=TCOL[t][0],gg=TCOL[t][1],b=TCOL[t][2];
+    const o=owner[i];
+    if(o&&players[o]){
+      const p=players[o];let col=p.col;const rel=p.rel;
+      if(rel==='you'||rel==='ally'||rel==='enemy')col=RELCOL[rel];
+      const a=0.72;r=r*(1-a)+col[0]*a;gg=gg*(1-a)+col[1]*a;b=b*(1-a)+col[2]*a;
+      nb(i,n);let border=false;for(const j of n)if(j>=0&&owner[j]!==o){border=true;break;}
+      if(border){const k=rel==='enemy'&&flashEnemy>0&&(Math.floor(flashEnemy*6)%2)?[255,70,60]:[0,0,0];const ba=k[0]?0.8:0.45;r=r*(1-ba)+k[0]*ba;gg=gg*(1-ba)+k[1]*ba;b=b*(1-ba)+k[2]*ba;}
+      const c=cent[o];c[0]+=i%W;c[1]+=(i/W)|0;c[2]++;
+    }else if(t===0){const y=(i/W)|0;const v=Math.sin(i*0.37)*3+Math.sin(y*0.9)*2;r+=v;gg+=v;b+=v;}
+    const k=i*4;d[k]=r;d[k+1]=gg;d[k+2]=b;d[k+3]=255;
+  }
+  octx.putImageData(img,0,0);return cent;
+}
+function dpr(){return Math.min(2,window.devicePixelRatio||1)}
+function toScreen(x,y){const cw=canvas.width,ch=canvas.height;return[(x-cam.cx)*cam.z*dpr()+cw/2,(y-cam.cy)*cam.z*dpr()+ch/2];}
+function render(){
+  const cw=canvas.width,ch=canvas.height;if(!cw)return;
+  const cent=compose();
+  ctx.save();ctx.imageSmoothingEnabled=false;ctx.fillStyle='#4b6f94';ctx.fillRect(0,0,cw,ch);
+  const z=cam.z*dpr();const sx=cam.cx-cw/(2*z),sy=cam.cy-ch/(2*z),sw=cw/z,sh=ch/z;
+  ctx.drawImage(off,sx,sy,sw,sh,0,0,cw,ch);
+  const fs=dpr();
+  if(z>=2.2*fs){for(const c of CITIES){const [gx,gy]=g(c[1],c[2]);const [px,py]=toScreen(gx+.5,gy+.5);if(px<-20||py<-20||px>cw+20||py>ch+20)continue;
+    ctx.font=`${Math.max(7*fs,z*1.6)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=3*fs;ctx.strokeStyle='rgba(251,246,232,.9)';ctx.fillStyle='#2a1d0c';
+    ctx.strokeText(CITY_ICON[c[3]],px,py);ctx.fillText(CITY_ICON[c[3]],px,py);
+    if(z>=3*fs){ctx.font=`600 ${Math.max(8*fs,z*2)}px "Source Sans 3",sans-serif`;ctx.strokeText(c[0],px,py+z*2.4);ctx.fillText(c[0],px,py+z*2.4);}
+  }}
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  players.forEach((p,i)=>{if(!p||!p.cells)return;const c=cent[i];if(!c[2])return;const cx=c[0]/c[2]+.5,cy=c[1]/c[2]+.5;const [px,py]=toScreen(cx,cy);
+    const size=Math.sqrt(p.cells)*z*0.22;if(size<7*fs)return;const f=Math.min(15*fs,size);
+    ctx.font=`700 ${f}px "Cinzel",serif`;ctx.lineWidth=f*0.22;ctx.strokeStyle='rgba(251,246,232,.85)';ctx.fillStyle='#1a120a';
+    ctx.strokeText(p.name,px,py);ctx.fillText(p.name,px,py);
+    if(f>=12*fs){ctx.font=`600 ${f*0.62}px "Source Sans 3",sans-serif`;const t=`${p.cells} ▣  ${p.troops} ⚔`;ctx.strokeText(t,px,py+f*0.85);ctx.fillText(t,px,py+f*0.85);}
+  });
+  ctx.restore();
+}
+function resize(){const r=stage.getBoundingClientRect();canvas.width=Math.round(r.width*dpr());canvas.height=Math.round(r.height*dpr());render();}
+new ResizeObserver(resize).observe(stage);
+
+/* ===================== clock / scheduler ===================== */
+let playing=false,speed=1,clock=0,waiters=[],last=performance.now(),tickers=[];
+function frame(now){const dt=Math.min(100,now-last);last=now;
+  if(playing){clock+=dt*speed;if(flashEnemy>0)flashEnemy-=dt/1000;
+    if(camAnim){const k=Math.min(1,(clock-camAnim.t0)/camAnim.d);const e=k<.5?2*k*k:-1+(4-2*k)*k;cam.cx=camAnim.a.cx+(camAnim.b.cx-camAnim.a.cx)*e;cam.cy=camAnim.a.cy+(camAnim.b.cy-camAnim.a.cy)*e;cam.z=camAnim.a.z+(camAnim.b.z-camAnim.a.z)*e;if(k>=1)camAnim=null;}
+    for(const t of tickers)t(dt*speed/1000);
+    waiters=waiters.filter(w=>{if(clock>=w.until){w.res();return false;}return true;});
+  }
+  render();requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+class Cancelled extends Error{}
+let run=null;
+function wait(ms){return new Promise((res,rej)=>{const r=run;if(!r||r.dead)return rej(new Cancelled());r.cancels.push(()=>rej(new Cancelled()));waiters.push({until:clock+ms,res});});}
+function camTo(b,ms=900){camAnim={a:{...cam},b,t0:clock,d:ms};return wait(ms);}
+function camJump(b){camAnim=null;Object.assign(cam,b);}
+
+/* ===================== UI helpers ===================== */
+const overlay=document.getElementById('overlay'),toasts=document.getElementById('toasts'),cursor=document.getElementById('cursor');
+const el=(html)=>{const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstElementChild;};
+function add(html){const e=el(html);overlay.appendChild(e);return e;}
+function clearUI(){overlay.innerHTML='';toasts.innerHTML='';cursor.hidden=true;}
+const fmtTime=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+function toast(text,kind='',ms=3800){const t=el(`<div class="card toast ${kind}">${text}</div>`);toasts.appendChild(t);setTimeout(()=>t.remove(),ms/speed);}
+function hud(){
+  if(!game.placed)return;
+  let lb=overlay.querySelector('.lb');if(!lb){lb=add(`<div class="hud card lb"><h4>Reyting</h4><table><thead><tr><th>#</th><th>Davlat</th><th>Hudud</th><th>Qo‘shin</th></tr></thead><tbody></tbody></table></div>`);}
+  const sorted=players.filter(p=>p&&p.alive&&p.cells>0).sort((a,b)=>b.cells-a.cells);
+  const rows=sorted.slice(0,7);if(!rows.includes(you()))rows.push(you());
+  lb.querySelector('tbody').innerHTML=rows.map(p=>{const rk=sorted.indexOf(p)+1;const rel=p.rel==='ally'?'<span class="rel ally">ittifoq</span>':p.rel==='enemy'?'<span class="rel enemy">urush</span>':'';
+    const col=p.rel in RELCOL?RELCOL[p.rel]:p.col;
+    return `<tr class="${p.id===YOU?'you':''} ${p.id===YOU&&rk>7?'me-row':''}"><td>${rk}</td><td><i class="dot" style="background:rgb(${col})"></i>${p.name}${p.kind==='human'&&p.id!==YOU?' <span class="rel human">odam</span>':''}${rel}</td><td>${p.cells}</td><td>${p.troops}</td></tr>`;}).join('');
+  let me=overlay.querySelector('.me');if(!me){me=add(`<div class="hud card me"><h4>Temuriylar · siz</h4><div class="grid">
+    <div class="stat"><b data-k="cells">0</b><span>Hudud</span></div><div class="stat hl"><b data-k="troops">0</b><span>Qo‘shin</span></div>
+    <div class="stat"><b data-k="score">0</b><span>Ball</span></div><div class="stat"><b data-k="level">A2</b><span>Daraja</span></div></div>
+    <div class="foot"><span>Qo‘shin daromadi</span><b data-k="inc">+0/min</b></div></div>`);}
+  const y=you();me.querySelector('[data-k=cells]').textContent=y.cells;me.querySelector('[data-k=troops]').textContent=y.troops;me.querySelector('[data-k=score]').textContent=y.score;me.querySelector('[data-k=level]').textContent=game.level;
+  me.querySelector('[data-k=inc]').textContent=`+${Math.round(y.cells*0.015+(game.madrasa?4:0))}/min`;
+  let tm=overlay.querySelector('.timer');if(!tm)tm=add(`<div class="hud card timer"></div>`);tm.textContent=fmtTime(game.time)+' / 30:00';
+  let ac=overlay.querySelector('.actions');if(!ac)ac=add(`<div class="hud actions"><div class="btn primary" id="expand">✎ Kengaytirish</div><div class="btn ghost" id="ratio">✎ 50% · 🎤 50%</div></div>`);
+}
+async function cursorTo(target,click=true){cursor.hidden=false;const r=stage.getBoundingClientRect();let x,y;
+  if(Array.isArray(target)){x=target[0];y=target[1];}else{const b=target.getBoundingClientRect();x=b.left-r.left+b.width/2;y=b.top-r.top+b.height/2;}
+  cursor.style.left=x+'px';cursor.style.top=y+'px';await wait(650);
+  if(click){cursor.classList.remove('click');void cursor.offsetWidth;cursor.classList.add('click');if(!Array.isArray(target)&&target.classList.contains('btn')){target.classList.add('pressed');setTimeout(()=>target.classList.remove('pressed'),200);}await wait(380);}
+}
+function cellScreen(x,y){const [px,py]=toScreen(x,y);return[px/dpr(),py/dpr()];}
+async function typeInto(node,text,per=42){node.innerHTML='<i class="caret"></i>';let s='';for(const ch of text){s+=ch;node.innerHTML=s.replace(/</g,'&lt;')+'<i class="caret"></i>';await wait(per+Math.random()*30);}node.textContent=s;}
+async function growAnim(pid,count,target=0,focus=null,perStep=55,stepCells=3,onStep=null){let left=count;while(left>0){const c=grow(pid,Math.min(stepCells,left),target,focus);if(!c)break;left-=c;if(onStep)onStep(count-left);hud();await wait(perStep);}}
+function terrainNote(x,y,text){const [px,py]=cellScreen(x,y);return add(`<div class="terrain-note" style="left:${px}px;top:${py}px">${text}</div>`);}
+function hint(text,x,y,dir='left'){return add(`<div class="hint ${dir}" style="left:${x};top:${y}">${text}</div>`);}
+function tickTroops(){tickers=[(dt)=>{if(!game.placed)return;game.time+=dt*4;players.forEach(p=>{if(!p||!p.alive)return;p._acc=(p._acc||0)+dt*4*(p.cells*0.015+(p.id===YOU&&game.madrasa?4:0))/60;if(p._acc>=1){const n=Math.floor(p._acc);p._acc-=n;p.troops+=n;}});hud();}];}
+
+/* ===================== scenes ===================== */
+const SAM=g(66.97,39.65),WORLD={cx:360,cy:150,z:1.3},CA={cx:SAM[0]-16,cy:SAM[1]+4,z:4.5};
+const scenes=[
+{t:'Kirish',d:'Ilova ochiladi. Kirish yoki mehmon rejimi.',text:'Ilova veb, Android va iOS da bir xil ochiladi. Orqada tarixiy dunyo xaritasi. Foydalanuvchi Google yoki email bilan kiradi, yoki mehmon sifatida darhol o‘ynaydi (progress saqlanmaydi).',focus:'Birinchi daqiqadayoq o‘yin ko‘rinadi, uzun ro‘yxatdan o‘tish yo‘q.',
+ final(){},
+ async run(){camJump(WORLD);const s=add(`<div class="screen"><div class="logo">IMPERIYA<small>Ingliz tili · jonli strategiya</small></div><div class="stack"><div class="btn primary" id="gbtn">Google bilan kirish</div><div class="btn">Email bilan kirish</div><div class="btn ghost">Mehmon sifatida o‘ynash</div></div><div style="font-size:1.1cqw;color:#6b6050">Mehmon rejimida ball va lug‘at saqlanmaydi</div></div>`);
+   await wait(1500);await cursorTo(s.querySelector('#gbtn'));await wait(600);}},
+{t:'Davlat va daraja',d:'Davlat nomi, bayroq rangi, 1 daqiqalik daraja testi.',text:'Foydalanuvchi davlat nomini va rangini tanlaydi. Keyin qisqa test: 5 ta savol, writing va speaking aralash. Natijaga qarab daraja (A1, A2, B1) belgilanadi va mashqlar shu darajadan boshlanadi. Testni o‘tkazib yuborish mumkin.',focus:'Daraja testi 1 daqiqa, keyin har o‘yin natijasi darajani o‘zi yangilab boradi.',
+ final(){},
+ async run(){const s=add(`<div class="screen"><div class="logo" style="font-size:2.4cqw">Davlatingizni tuzing</div><div class="stack" style="width:36cqw"><div class="field"><label>Davlat nomi</label><div class="input" id="nm"></div></div><div class="field"><label>Bayroq rangi</label><div class="swatches"><i style="background:#8c2f28" class="on"></i><i style="background:#1f6f8b"></i><i style="background:#3a8f4a"></i><i style="background:#b8860b"></i><i style="background:#5b2a86"></i></div></div>
+   <div class="card" style="padding:.8cqw 1cqw"><div style="font-size:1cqw;letter-spacing:.06em;text-transform:uppercase;color:#6b4a1e;font-weight:700">Daraja testi · 3 / 5</div><div style="font-size:1.4cqw;font-weight:600;margin:.3cqw 0">Inglizchaga yozing: <em>Bozor shahar markazida.</em></div><div class="input" id="a3"></div><div class="result" id="r3"></div></div><div class="btn primary" id="go">Davom etish</div></div></div>`);
+   await typeInto(s.querySelector('#nm'),'Temuriylar');await wait(500);await typeInto(s.querySelector('#a3'),'The market is in the city center');await wait(300);
+   const r=s.querySelector('#r3');r.className='result ok';r.textContent='✓ To‘g‘ri';await wait(900);
+   s.querySelector('.card').innerHTML=`<div style="font-size:1.2cqw;color:#6b4a1e;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Natija</div><div style="font-size:2.2cqw;font-family:var(--font-display);color:#8c2f28;font-weight:700">Daraja: A2</div><div style="font-size:1.15cqw;color:#6b6050">Writing 2/2 · Speaking 1/2 · Lug‘at 1/1</div>`;
+   await wait(1200);await cursorTo(s.querySelector('#go'));await wait(400);}},
+{t:'Asosiy menyu',d:'Rejimlar, profil, lug‘at, do‘stlar.',text:'Yuqorida profil: daraja, umumiy ball, g‘alabalar, o‘rganilgan so‘zlar. O‘rtada to‘rt rejim: Jahon jangi (100 kishigacha), 1v1 duel, Guruh jangi, Mintaqa (keyinroq). Pastda Mening lug‘atim, Do‘stlar, Reyting, Sozlamalar.',focus:'Har rejim kartasida hozir nechta odam o‘ynayotgani jonli ko‘rinadi.',
+ final(){},
+ async run(){const s=add(`<div class="screen" style="justify-content:flex-start;padding-top:2.4cqw"><div class="card profile"><div class="avatar">T</div><div><div style="font-family:var(--font-display);font-size:1.8cqw;font-weight:700">Temuriylar</div><div style="color:#6b6050">Daraja A2 · Streak 4 kun</div></div><div class="stat"><b>1 240</b><span>Ball</span></div><div class="stat"><b>3</b><span>G‘alaba</span></div><div class="stat"><b>186</b><span>So‘z</span></div><div class="nav"><span>Lug‘atim</span><span>Do‘stlar</span><span>Reyting</span><span>Sozlamalar</span></div></div>
+   <div class="menu"><div class="card mode" id="m1"><b>Jahon jangi</b><span>100 kishigacha ochiq xona. Oxirgi tirik qolgan yoki 30 daqiqada eng katta davlat g‘olib.</span><span class="n">● 2 314 odam o‘ynamoqda</span></div><div class="card mode"><b>1v1 Duel</b><span>10 daqiqa, bir raqib. Reyting uchun.</span><span class="n">● 412 odam</span></div><div class="card mode"><b>Guruh jangi</b><span>2–4 jamoa, do‘stlar bilan yoki tasodifiy.</span><span class="n">● 196 odam</span></div><div class="card mode" style="opacity:.6"><b>Mintaqa</b><span>Markaziy Osiyo, Kavkaz, Yevropa…</span><span class="n" style="color:#6b6050">Tez orada</span></div></div></div>`);
+   await wait(1500);const m=s.querySelector('#m1');await cursorTo(m);m.classList.add('hot');await wait(600);}},
+{t:'Xona tanlash',d:'Ochiq xonalar, xususiy xona kodi, o‘qituvchi xonasi.',text:'Ro‘yxatda har xona: nechta odam, nechta bot, qancha vaqt o‘tgan, daraja oralig‘i. "Tez kirish" eng mos xonaga qo‘shadi. Yon tabda do‘stlar uchun xususiy xona (kod bilan) va o‘qituvchi xonasi bor.',focus:'Xonaga o‘yin o‘rtasida ham kirish mumkin, xuddi territorial.io kabi.',
+ final(){},
+ async run(){const s=add(`<div class="screen" style="justify-content:flex-start;padding-top:2.4cqw"><div class="rooms"><div class="tabs"><div class="on">Ochiq xonalar</div><div>Xususiy xona (kod)</div><div>O‘qituvchi xonasi</div></div>
+   <table><thead><tr><th>Xona</th><th>Xarita</th><th>Odamlar</th><th>Botlar</th><th>Vaqt</th><th>Daraja</th><th></th></tr></thead><tbody>
+   <tr class="hot"><td>Jahon #412</td><td>Butun dunyo</td><td>51 / 100</td><td>454</td><td>0:24</td><td>A1–B1</td><td><span class="pill live">jonli</span></td></tr>
+   <tr><td>Jahon #413</td><td>Butun dunyo</td><td>38 / 100</td><td>462</td><td>12:10</td><td>A2–B2</td><td><span class="pill live">jonli</span></td></tr>
+   <tr><td>Jahon #414</td><td>Butun dunyo</td><td>9 / 100</td><td>491</td><td>kutmoqda</td><td>A1–B1</td><td><span class="pill">boshlanmoqda</span></td></tr>
+   </tbody></table><div style="display:flex;gap:.8cqw;justify-content:flex-end"><div class="btn">Xona yaratish</div><div class="btn primary" id="quick">⚡ Tez kirish</div></div></div></div>`);
+   await wait(1600);await cursorTo(s.querySelector('#quick'));await wait(500);}},
+{t:'Boshlang‘ich joyni tanlash',d:'Dunyo xaritasi, 20 soniya, bo‘sh joyga bosish.',text:'Butun dunyo xaritasi haqiqiy geografiya bilan: cho‘llar, tog‘lar, o‘rmonlar, dengizlar. Tarixiy shaharlar belgi bilan turadi. Band hududlar boshqa davlatlar rangida. Foydalanuvchi xaritani yaqinlashtirib bo‘sh joyga bosadi, o‘sha yerda davlat paydo bo‘ladi.',focus:'Joy tanlashda geografiya muhim: tog‘ bilan o‘ralgan joy himoyaga oson, lekin kengayish qimmat.',
+ final(){game.placed=true;grow(YOU,30*S,0,SAM);you().troops=40;game.time=20;},
+ async run(){camJump(WORLD);const b=add(`<div class="card banner">Boshlang‘ich joyni tanlang<small id="cd">Qolgan vaqt: 20 s · bo‘sh joyga bosing</small></div>`);
+   let cd=20;const t=setInterval(()=>{cd=Math.max(0,cd-1);const e=b.querySelector('#cd');if(e)e.textContent=`Qolgan vaqt: ${cd} s · bo‘sh joyga bosing`;},1000/speed);
+   try{
+   await wait(1400);await camTo(CA,1400);await wait(300);
+   const n1=terrainNote(SAM[0]-12,SAM[1]+10,'Qizilqum cho‘li');const n2=terrainNote(SAM[0]+18,SAM[1]-2,'Tyanshan tog‘lari');
+   await wait(1200);await cursorTo(cellScreen(SAM[0]+.5,SAM[1]+.5));b.remove();n1.remove();n2.remove();
+   game.placed=true;you().troops=40;hud();await growAnim(YOU,30*S,0,SAM,30,8);game.time=20;tickTroops();await wait(900);
+   }finally{clearInterval(t);}}},
+{t:'Kengaytirish: writing',d:'Mashq xarita ustida, javob to‘g‘ri bo‘lsa hudud o‘sadi.',text:'Kengaytirish tugmasi bosiladi. Pastda kichik panel chiqadi, xarita ko‘rinib va ishlab turadi. Topshiriq o‘zbekcha, javob inglizcha. To‘g‘ri javob: hudud bo‘sh joylarga kengayadi, ball va qo‘shin qo‘shiladi. Xato bo‘lsa to‘g‘ri javob ko‘rsatiladi va 5 soniya kutiladi.',focus:'Bo‘sh hudud uchun faqat mashq kerak, qo‘shin sarflanmaydi. Ball darajasi oshgani sari bitta javob ko‘proq hudud beradi.',
+ final(){grow(YOU,50*S,0,SAM);you().score=10;you().troops=52;game.ex.w=1;game.ex.wOk=1;game.time=70;},
+ async run(){camJump(CA);hud();tickTroops();const btn=overlay.querySelector('#expand');await wait(800);await cursorTo(btn);
+   const sh=add(`<div class="hud card sheet"><div class="kind"><span>✎ Writing · bo‘sh hududga kengayish</span><span class="lvl">A2</span></div><div class="q">Inglizchaga yozing: <small>Men har kuni ertalab choy ichaman.</small></div><div class="input" id="ans"></div><div class="result" id="res"></div></div>`);
+   await wait(700);await typeInto(sh.querySelector('#ans'),'I drink tea every morning');await wait(350);
+   const r=sh.querySelector('#res');r.className='result ok';r.innerHTML='✓ To‘g‘ri · +10 ball · +12 qo‘shin · hudud +'+(50*S);you().score=10;you().troops+=12;hud();
+   await growAnim(YOU,50*S,0,[SAM[0]-6,SAM[1]+6],40,12);await wait(900);sh.remove();game.ex.w=1;game.ex.wOk=1;}},
+{t:'Kengaytirish: speaking',d:'Mikrofon tugmasi, ovoz tanish, talaffuz bahosi. Madrasa bonusi.',text:'Keyingi mashq speaking. Jumla ko‘rsatiladi (A2 da inglizcha, yuqori darajada o‘zbekcha). Foydalanuvchi mikrofonni bosib turib aytadi, ilova tanib solishtiradi va foizda baho beradi. Samarqand egallanganda madrasa bonusi: mashq balli +20%.',focus:'Mikrofon bo‘lmasa tizim faqat writing beradi. Nisbatni foydalanuvchi sozlamada tanlaydi (standart 50/50).',
+ final(){grow(YOU,60*S,0,SAM);you().score=24;you().troops=70;game.madrasa=true;game.ex.s=1;game.ex.sOk=1;game.time=120;},
+ async run(){camJump(CA);hud();tickTroops();await wait(500);await cursorTo(overlay.querySelector('#expand'));
+   const sh=add(`<div class="hud card sheet"><div class="kind"><span>🎤 Speaking · bo‘sh hududga kengayish</span><span class="lvl">A2</span></div><div class="q">Ovoz chiqarib ayting: <small style="font-size:1.5cqw;color:#241d14;font-weight:600">The merchants travel along the Silk Road.</small></div><div class="mic"><div class="m" id="mic">🎤</div><div class="wave" id="wv">${'<i></i>'.repeat(26)}</div></div><div class="transcript" id="tr">Bosib turing va ayting</div><div class="result" id="res"></div></div>`);
+   await wait(600);await cursorTo(sh.querySelector('#mic'));sh.querySelector('#mic').classList.add('live');sh.querySelector('#wv').classList.add('live');
+   const tr=sh.querySelector('#tr');tr.textContent='Tinglanmoqda…';await wait(900);tr.textContent='“The merchants travel…”';await wait(800);tr.textContent='“The merchants travel along the Silk Road”';await wait(500);
+   sh.querySelector('#mic').classList.remove('live');sh.querySelector('#wv').classList.remove('live');
+   const r=sh.querySelector('#res');r.className='result ok';r.innerHTML='✓ 92% aniqlik · +14 ball · hudud +'+(60*S)+' &nbsp;<span style="font-weight:400;color:#8a5a00">"merchants" talaffuzini tekshiring</span>';you().score=24;hud();
+   await growAnim(YOU,60*S,0,[SAM[0]-4,SAM[1]],40,12);game.madrasa=true;toast('◆ Samarqand madrasasi sizniki: mashq balli +20%','bonus');hud();await wait(1600);sh.remove();}},
+{t:'Hudud va qo‘shin alohida',d:'Katta davlat, kam qo‘shin. Reytingda ikkala ustun.',text:'Reytingda hudud va qo‘shin alohida ustunda. Mo‘g‘ul ulusi eng katta davlat, lekin qo‘shini 90 ta, demak himoyasi zaif. Qo‘shin vaqt bilan hudud hajmiga qarab va har to‘g‘ri mashqdan to‘planadi. Hudud hajmi o‘zi qo‘shin bermaydi.',focus:'Territorial.io da bu ko‘rinmaydi. Bizda raqib kuchi bir qarashda aniq.',
+ final(){you().troops=80;game.time=150;},
+ async run(){camJump({cx:SAM[0]+12,cy:SAM[1],z:2.5});hud();tickTroops();await wait(600);
+   const lb=overlay.querySelector('.lb');const r=lb.getBoundingClientRect(),s=stage.getBoundingClientRect();
+   const h=hint('<b>Hudud</b> va <b>Qo‘shin</b> alohida. Mo‘g‘ul ulusi: '+players[BIG].cells+' hudud, faqat '+players[BIG].troops+' qo‘shin. Katta, lekin zaif.',(r.right-s.left+10)+'px',(r.top-s.top+40)+'px','left');
+   await wait(2600);h.remove();const me=overlay.querySelector('.me');const m=me.getBoundingClientRect();
+   const h2=hint('Sizda hudud '+you().cells+', qo‘shin '+you().troops+'. Qo‘shin daromadi hududga qarab, madrasa +4/min qo‘shadi.',(m.left-s.left-stage.clientWidth*0.23)+'px',(m.top-s.top+30)+'px','right');await wait(2600);h2.remove();}},
+{t:'Qo‘shni va diplomatiya menyusi',d:'Davlatni bosish: Ittifoq, Urush, Xabar.',text:'G‘arbda Oltin O‘rda (odam o‘yinchi) chegaraga yetib keldi. Uning hududini bosganda uchta tanlov chiqadi: Ittifoq taklif qilish, Urush e‘lon qilish, Xabar yozish. Bu yerda hujum tugmasi yo‘q: hujum alohida va qimmat qaror.',focus:'Har bir davlat ustida egasi odam yoki bot ekani, hududi va qo‘shini ko‘rinadi.',
+ final(){game.time=180;},
+ async run(){camJump({cx:SAM[0]-20,cy:SAM[1]-2,z:3.5});hud();tickTroops();await wait(500);const a=players[ALLY];let cx=0,cy=0,n=0;for(let i=0;i<W*H;i++)if(owner[i]===ALLY){cx+=i%W;cy+=(i/W)|0;n++;}cx=cx/n;cy=cy/n;
+   const [px,py]=cellScreen(cx+.5,cy+.5);await cursorTo([px,py]);
+   const m=add(`<div class="hud card ctx" style="left:${px}px;top:${py-8}px"><div class="name">Oltin O‘rda · odam · ${a.cells} hudud · ${a.troops} qo‘shin</div><div id="c1">🤝 Ittifoq taklif qilish</div><div>⚔ Urush e‘lon qilish</div><div>✉ Xabar yozish</div></div>`);
+   await wait(1200);await cursorTo(m.querySelector('#c1'));m.querySelector('#c1').classList.add('hot');await wait(600);}},
+{t:'Ittifoq muzokarasi',d:'Erkin chat, shartnoma bandlari, ikki tomonlama imzo.',text:'Yon panelda muzokara ochiladi, xarita ko‘rinib turadi. Ikki o‘yinchi erkin yozishadi, inglizcha yozgan xabar ball beradi. Shartnoma bandlarini o‘zlari belgilaydi: hujum qilmaslik muddati, birgalikda urush, hududni bo‘lish, mashq almashish. Ikkalasi imzolaganda chegara yashil bo‘ladi.',focus:'Shartnomani buzish mumkin, lekin buzgan tomon obro‘ va qo‘shin yo‘qotadi.',
+ final(){players[ALLY].rel='ally';game.treaty=true;you().score=30;game.time=240;},
+ async run(){camJump({cx:SAM[0]-28,cy:SAM[1]-2,z:3.5});hud();tickTroops();
+   const p=add(`<div class="hud card diplo"><div class="head">Muzokara · <span>Oltin O‘rda</span></div><div class="chat" id="chat"></div><div class="terms"><h5>Shartnoma bandlari</h5><label><span class="box" id="t1"></span>10 daqiqa bir-biriga hujum yo‘q</label><label><span class="box" id="t2"></span>Safaviylarga birga urush</label><label><span class="box" id="t3"></span>Olingan hudud 50/50</label><label><span class="box" id="t4"></span>Haftada mashq almashish</label></div><div class="sign"><div class="s" id="s1">Temuriylar imzosi</div><div class="s" id="s2">Oltin O‘rda imzosi</div></div></div>`);
+   const chat=p.querySelector('#chat');const say=async(me,text,pts)=>{const m=el(`<div class="msg ${me?'me':''}">${text}${pts?`<span class="pts">+${pts}</span>`:''}</div>`);chat.appendChild(m);await wait(1300);};
+   await wait(500);await say(true,'Hi! The Safavids are growing fast. Alliance?',3);await say(false,'Agreed. No attacks between us for 10 minutes?');await say(true,'Yes. We split captured land 50/50.',3);
+   for(const id of['t1','t2','t3']){const b=p.querySelector('#'+id);await cursorTo(b);b.classList.add('on');b.textContent='✓';}
+   await wait(400);await cursorTo(p.querySelector('#s1'));p.querySelector('#s1').classList.add('done');await wait(1100);p.querySelector('#s2').classList.add('done');
+   players[ALLY].rel='ally';game.treaty=true;you().score+=6;hud();toast('🤝 Ittifoq tuzildi: Temuriylar + Oltin O‘rda','ally');await wait(1800);}},
+{t:'Urush e‘loni va relyef',d:'Ittifoqdoshlar birga urush e‘lon qiladi. Yo‘ldagi cho‘l va tog‘.',text:'Shartnomaga ko‘ra ikkalasi Safaviylarga urush e‘lon qiladi. Safaviylarga xabar boradi, chegarasi binafsha bo‘ladi. Oraliqda Qoraqum cho‘li va Kopetdog‘ bor: bu yo‘ldan o‘tgan qo‘shin kamayadi. Urush e‘lonsiz hujum ham mumkin, lekin kuchsizroq va obro‘ni tushiradi.',focus:'Relyef hujum narxini belgilaydi: tekislik arzon, cho‘l va tog‘ qimmat, dengiz eng qimmat.',
+ final(){players[ENEMY].rel='enemy';players[ENEMY].atWar=true;game.time=270;},
+ async run(){camJump({cx:SAM[0]-16,cy:SAM[1]+6,z:3.5});hud();tickTroops();await wait(400);
+   const m=add(`<div class="hud card ctx" style="left:48%;top:62%"><div class="name">Safaviylar · odam · ${players[ENEMY].cells} hudud · ${players[ENEMY].troops} qo‘shin</div><div>🤝 Ittifoq taklif qilish</div><div id="w">⚔ Urush e‘lon qilish (ittifoq bilan)</div><div>✉ Xabar yozish</div></div>`);
+   await wait(900);await cursorTo(m.querySelector('#w'));m.querySelector('#w').classList.add('hot');await wait(500);m.remove();
+   players[ENEMY].rel='enemy';players[ENEMY].atWar=true;flashEnemy=3;hud();toast('⚔ Temuriylar va Oltin O‘rda Safaviylarga urush e‘lon qildi','war');
+   await wait(800);const n1=terrainNote(SAM[0]-14,SAM[1]+4,'Qoraqum cho‘li · −25% qo‘shin');const n2=terrainNote(SAM[0]-16,SAM[1]+10,'Kopetdog‘ · −15% qo‘shin');await wait(3200);n1.remove();n2.remove();}},
+{t:'Hujum: qo‘shin tanlash',d:'Slayder, yo‘l hisobi, taxminiy natija.',text:'Dushman hududi bosiladi, hujum paneli chiqadi. Slayder bilan necha qo‘shin yuborish tanlanadi. Panel darhol hisoblab ko‘rsatadi: yo‘ldagi relyef, taxminiy yo‘qotish, yetib boradigan qo‘shin va taxminan qancha hudud olish mumkin.',focus:'Territorial.io da bu hisob yo‘q, o‘yinchi taxmin qiladi. Bizda qaror aniq raqamlar bilan.',
+ final(){game.time=290;},
+ async run(){camJump({cx:SAM[0]-16,cy:SAM[1]+6,z:3.5});hud();tickTroops();you().troops=Math.max(you().troops,180);hud();await wait(400);
+   const a=add(`<div class="hud card attack"><div class="title"><span>⚔ Hujum</span><span class="tgt">Safaviylar · urush holati</span></div><div class="slider"><div class="fill" id="fill"></div><div class="lab" id="lab">0 qo‘shin · 0%</div></div>
+   <div class="route"><div>Yo‘l<br><span class="tag">cho‘l</span><span class="tag">tog‘</span></div><div class="warn">Yo‘qotish<b id="loss">−40%</b></div><div>Yetib boradi<b id="arr">0</b></div></div>
+   <div class="prog" style="margin-top:.5cqw"><span>Taxminiy hudud:</span><b id="est">0</b><span style="color:#6b6050">(mashq natijasiga qarab)</span></div>
+   <div class="row"><div class="btn ghost">Bekor</div><div class="btn primary" id="go">⚔ Hujumni boshlash</div></div></div>`);
+   const sl=a.querySelector('.slider');const r=sl.getBoundingClientRect(),s=stage.getBoundingClientRect();await cursorTo([r.left-s.left+6,r.top-s.top+r.height/2],false);
+   for(let k=0;k<=60;k+=3){a.querySelector('#fill').style.width=k+'%';const tr=Math.round(you().troops*k/100);a.querySelector('#lab').textContent=`${tr} qo‘shin · ${k}%`;a.querySelector('#arr').textContent=Math.round(tr*0.6);a.querySelector('#est').textContent='~'+Math.round(tr*0.6*0.8);cursor.style.left=(r.left-s.left+r.width*k/100)+'px';await wait(70);}
+   await wait(900);await cursorTo(a.querySelector('#go'));await wait(400);}},
+{t:'Hujum mashqi: raqib lug‘ati',d:'Himoyalanuvchi tayyorlagan 5 so‘z. Natija hujum kuchini belgilaydi.',text:'Hujum boshlanishi uchun mashq: Safaviylar o‘yinchisi oldindan o‘z lug‘atidan 5 ta so‘z tayyorlab qo‘ygan. Hujum qiluvchi ularni inglizcha yozadi (yoki aytadi). 4/5 to‘g‘ri: hujum kuchi 80%. Tizim javoblarni avtomatik tekshiradi, kutish yo‘q.',focus:'O‘yinchilar bir-biriga mashq beradi, lekin javobni tizim tekshiradi. Yomon savolga shikoyat tugmasi bor.',
+ final(){you().score=40;game.ex.w=6;game.ex.wOk=5;game.missed=['bridge'];game.time=320;},
+ async run(){camJump({cx:SAM[0]-16,cy:SAM[1]+6,z:3.5});hud();tickTroops();
+   const sh=add(`<div class="hud card sheet" style="width:54cqw"><div class="kind"><span>⚔ Hujum mashqi · Safaviylar lug‘ati</span><span class="lvl">5 so‘z · 20 s</span></div><div class="q" style="font-size:1.3cqw;color:#6b6050;font-weight:400">Har so‘zni inglizcha yozing</div><div class="words" id="w">
+   <div><span>qal’a</span><b id="a1"></b></div><div><span>savdogar</span><b id="a2"></b></div><div><span>ko‘prik</span><b id="a3"></b></div><div><span>daryo</span><b id="a4"></b></div><div><span>shartnoma</span><b id="a5"></b></div><div style="border:0;background:none;justify-content:flex-end;color:#6b6050">⚠ shikoyat</div></div><div class="result" id="res"></div></div>`);
+   const ans=[['a1','castle',1],['a2','merchant',1],['a3','brige',0],['a4','river',1],['a5','treaty',1]];
+   for(const[id,t,ok]of ans){const b=sh.querySelector('#'+id);await typeInto(b,t,60);b.parentElement.classList.add(ok?'ok':'bad');if(!ok)b.innerHTML=`${t} <span style="color:#7a1c17;font-weight:400">→ bridge</span>`;await wait(250);}
+   const r=sh.querySelector('#res');r.className='result part';r.textContent='4 / 5 to‘g‘ri · hujum kuchi 80% · +16 ball · "bridge" lug‘atingizga qo‘shildi';you().score=40;game.missed=['bridge'];hud();await wait(2400);sh.remove();}},
+{t:'Hujum jarayoni va to‘xtatish',d:'Qo‘shin cho‘ldan o‘tadi, hudud piksel-piksel o‘tadi, istalgan payt to‘xtatish.',text:'Qo‘shin yo‘lga chiqadi. Hisoblagichda qo‘shin kamayib boradi: cho‘l va tog‘ tufayli har qadam qimmat. Hudud piksel-piksel Temuriylarga o‘tadi, jonli ko‘rinadi. Foydalanuvchi "To‘xtatish"ni bosadi: egallangan hudud qoladi, chegara shu yerda muzlaydi, qolgan qo‘shin qaytadi.',focus:'Qo‘shin tugasa hujum o‘zi to‘xtaydi. Bir vaqtda bir necha hujum olib borish mumkin.',
+ final(){grow(YOU,42*S,ENEMY,[SAM[0]-12,SAM[1]+10]);you().troops=90;game.time=360;},
+ async run(){camJump({cx:SAM[0]-12,cy:SAM[1]+8,z:4});hud();tickTroops();const start=you().troops;const sent=Math.round(start*0.6);you().troops-=sent;hud();
+   const a=add(`<div class="hud card attack" style="width:40cqw"><div class="title"><span>⚔ Hujum davom etmoqda</span><span class="tgt">Safaviylar</span></div><div class="prog"><span>Qo‘shin</span><div class="bar"><i id="bar"></i></div><b id="tr">${sent}</b></div><div class="prog"><span>Olingan hudud</span><b id="cap">0</b><span style="color:#8a5a00" id="note">cho‘l: yo‘qotish 2×</span></div><div class="row"><div class="btn danger" id="stop">■ To‘xtatish</div></div></div>`);
+   let left=sent;const bar=a.querySelector('#bar'),tr=a.querySelector('#tr'),cap=a.querySelector('#cap');
+   await growAnim(YOU,42*S,ENEMY,[SAM[0]-12,SAM[1]+10],80,6,(c)=>{left=Math.max(0,sent-Math.round(c*1.55/S));bar.style.width=(left/sent*100)+'%';tr.textContent=left;cap.textContent=c;if(c>20)a.querySelector('#note').textContent='tog‘: yo‘qotish 1.5×';});
+   await wait(300);await cursorTo(a.querySelector('#stop'));you().troops+=Math.round(left*0.9);hud();toast(`■ Hujum to‘xtatildi: '+(42*S)+' hudud sizniki qoldi, ${Math.round(left*0.9)} qo‘shin qaytdi`);await wait(2000);a.remove();}},
+{t:'Qarshi hujum va qaytarib olish',d:'Raqib hujum qiladi, ogohlantirish, himoya mashqi, hudud qaytadi.',text:'Safaviylar qarshi hujumga o‘tadi: chegara qizil yonadi, ogohlantirish chiqadi. Ular yaqinda yo‘qotgan hududni qaytara boshlaydi (2 daqiqa ichida qaytarish arzonroq). Foydalanuvchi himoya mashqini bajaradi va o‘z qo‘shini bilan qarshi hujum qiladi. Chegara ikki tomonga surilib turadi, hech qachon yakuniy emas.',focus:'Ikkala tomon bir-biriga hujum qilsa, chegara ko‘proq qo‘shin va yaxshiroq mashq natijasi tomoniga suriladi.',
+ final(){grow(ENEMY,18*S,YOU,[SAM[0]-6,SAM[1]+6]);grow(YOU,22*S,ENEMY,[SAM[0]-10,SAM[1]+10]);you().score=52;game.ex.s=3;game.ex.sOk=3;game.time=420;},
+ async run(){camJump({cx:SAM[0]-12,cy:SAM[1]+8,z:4});hud();tickTroops();await wait(500);flashEnemy=4;toast('⚠ Safaviylar sizga hujum qilmoqda! Chegara: Hirot yo‘nalishi','war',5000);
+   await growAnim(ENEMY,18*S,YOU,[SAM[0]-6,SAM[1]+6],90,6);await wait(400);
+   const sh=add(`<div class="hud card sheet"><div class="kind"><span>🛡 Himoya · speaking</span><span class="lvl">A2</span></div><div class="q">Ayting: <small style="font-size:1.5cqw;color:#241d14;font-weight:600">We will defend the city walls.</small></div><div class="mic"><div class="m live">🎤</div><div class="wave live">${'<i></i>'.repeat(26)}</div></div><div class="transcript" id="tr">Tinglanmoqda…</div><div class="result" id="res"></div></div>`);
+   await wait(1500);sh.querySelector('#tr').textContent='“We will defend the city walls”';sh.querySelector('.m').classList.remove('live');sh.querySelector('.wave').classList.remove('live');
+   const r=sh.querySelector('#res');r.className='result ok';r.textContent='✓ 96% · himoya +30% · qarshi hujum ochildi';you().score=52;hud();await wait(1200);sh.remove();
+   toast('⚔ Qarshi hujum: 60 qo‘shin, yaqinda yo‘qotilgan hudud (arzon)','');you().troops-=60;hud();
+   await growAnim(YOU,22*S,ENEMY,[SAM[0]-10,SAM[1]+10],70,6);toast('Hudud qaytarib olindi: +'+(22*S)+'','ally');await wait(1600);}},
+{t:'Mag‘lubiyat va tomoshabin',d:'Davlat qulaydi, o‘yinchi tomoshabin bo‘ladi, reyting yangilanadi.',text:'Oltin O‘rda kichik Xorazm davlatini to‘liq egallaydi. Xorazm o‘yinchisi "Davlatingiz qulagan" xabarini oladi, shu xonada qayta boshlay olmaydi: tomoshabin bo‘ladi yoki yangi xonaga o‘tadi. Reytingdan o‘chadi.',focus:'Qulagan o‘yinchining ballari saqlanadi, faqat shu o‘yin tugaydi.',
+ final(){grow(ALLY,players[SMALL].cells,SMALL,null);players[SMALL].alive=false;game.time=600;},
+ async run(){camJump({cx:SAM[0]-16,cy:SAM[1]-4,z:3.5});hud();tickTroops();await wait(600);const n=players[SMALL].cells;await growAnim(ALLY,n,SMALL,null,60,8);players[SMALL].alive=false;hud();
+   toast('☠ Xorazm qulatildi (Oltin O‘rda tomonidan). O‘yinchi tomoshabin rejimiga o‘tdi','war',5000);await wait(2600);}},
+{t:'O‘yin yakuni va natija',d:'30 daqiqa tugadi, g‘olib, shaxsiy til natijasi, xato so‘zlar lug‘atga.',text:'Vaqt 30:00 ga yetadi, eng katta davlat g‘olib (yoki undan oldin oxirgi tirik qolgan). Natija ekrani: o‘rin, hudud, ball, va eng muhimi til natijasi: writing va speaking aniqligi, xato so‘zlar. Ular "Mening lug‘atim"ga tushadi va keyingi o‘yinlarda qayta so‘raladi.',focus:'Daraja o‘yin natijasiga qarab o‘zi yangilanadi, keyingi o‘yin yangi darajada boshlanadi.',
+ final(){game.time=1800;},
+ async run(){camJump({cx:SAM[0]-16,cy:SAM[1]+4,z:3});hud();tickTroops();game.time=1785;await wait(2200);tickers=[];game.time=1800;hud();
+   const sorted=players.filter(p=>p&&p.alive&&p.cells>0).sort((a,b)=>b.cells-a.cells);const rank=sorted.indexOf(you())+1;
+   add(`<div class="screen"><div class="card resultcard"><h3>O‘yin tugadi · g‘olib: ${sorted[0].name}</h3><div class="big"><div><b>${rank}</b><span>O‘rin / ${sorted.length}</span></div><div><b>${you().cells}</b><span>Hudud</span></div><div><b>${you().score}</b><span>Ball</span></div><div><b>+38</b><span>Reyting</span></div></div>
+   <div class="skills"><div>✎ Writing · 11 / 13 to‘g‘ri<div class="bar"><i style="width:85%"></i></div>🎤 Speaking · 7 / 8 to‘g‘ri, o‘rtacha 91%<div class="bar"><i style="width:91%"></i></div><div style="color:#6b6050">Daraja A2 → A2+ (B1 ga 140 ball qoldi)</div></div>
+   <div>Lug‘atimga qo‘shildi<div class="chips" style="margin-top:.4cqw"><span>bridge</span><span>merchants (talaffuz)</span><span>treaty</span></div><div style="margin-top:.8cqw;color:#6b6050">Keyingi o‘yinda qayta so‘raladi</div><div style="display:flex;gap:.6cqw;margin-top:.8cqw"><div class="btn primary">Yana o‘ynash</div><div class="btn ghost">Menyu</div></div></div></div></div></div>`);
+   await wait(3000);}},
+{t:'O‘qituvchi rejimi va xususiy xona',d:'Kod bilan xona, o‘qituvchi lug‘ati, natijalar jadvali.',text:'O‘qituvchi xona yaratadi va o‘z so‘zlar ro‘yxatini yuklaydi. O‘quvchilar kod bilan kiradi va faqat shu so‘zlar bilan o‘ynaydi. O‘yin oxirida o‘qituvchi har o‘quvchining writing va speaking natijasini ko‘radi. Do‘stlar ham shu usulda xususiy xona ochadi.',focus:'Maktab va o‘quv markazlari uchun: bir dars davomida butun sinf bitta xonada o‘ynaydi.',
+ final(){},
+ async run(){camJump(WORLD);add(`<div class="screen"><div class="teacher"><div class="card"><h4>O‘qituvchi xonasi</h4><div style="font-size:1.1cqw;color:#6b6050">Xona kodi (o‘quvchilar kiritadi)</div><div class="code">SINF-7B</div><div style="font-size:1.15cqw;font-weight:600">Lug‘at: Unit 4 · Travel (32 so‘z)</div><ul><li>journey, passport, luggage, departure…</li><li>Mashq turi: writing 60% · speaking 40%</li><li>Xarita: Markaziy Osiyo · 15 daqiqa</li><li>Botlar: 20 · Hujum mashqlari faqat shu lug‘atdan</li></ul><div style="display:flex;gap:.6cqw;margin-top:.8cqw"><div class="btn primary">Boshlash (24 o‘quvchi kirdi)</div></div></div>
+   <div class="card"><h4>Natijalar · jonli</h4><table><thead><tr><th>O‘quvchi</th><th>Writing</th><th>Speaking</th><th>Xato so‘zlar</th></tr></thead><tbody><tr><td>Dilnoza</td><td>14/15</td><td>93%</td><td>luggage</td></tr><tr><td>Sardor</td><td>11/15</td><td>88%</td><td>departure, journey</td></tr><tr><td>Madina</td><td>15/15</td><td>96%</td><td>—</td></tr><tr><td>Jasur</td><td>9/15</td><td>81%</td><td>passport, luggage, ticket</td></tr><tr><td>…</td><td></td><td></td><td></td></tr></tbody></table><div style="font-size:1.05cqw;color:#6b6050;margin-top:.6cqw">Jadvalni yuklab olish · Xato so‘zlardan yangi mashq yaratish</div></div></div></div>`);await wait(3500);}}
+];
+
+/* ===================== player (transport) ===================== */
+let idx=0,finished=false;const N=scenes.length;
+const counter=document.getElementById('counter'),ntitle=document.getElementById('ntitle'),ntext=document.getElementById('ntext'),nfocus=document.getElementById('nfocus'),nnum=document.getElementById('nnum');
+const playBtn=document.getElementById('play'),progress=document.getElementById('progress'),list=document.getElementById('scenelist');
+scenes.forEach((s,i)=>{const b=el(`<i title="${i+1}. ${s.t}"><b></b></i>`);b.onclick=()=>goto(i);progress.appendChild(b);const li=el(`<li><span class="n">${i+1}</span><span><span class="t">${s.t}</span><span class="d">${s.d}</span></span></li>`);li.onclick=()=>{goto(i);window.scrollTo({top:0,behavior:'smooth'});};list.appendChild(li);});
+function setNarr(i){const s=scenes[i];counter.textContent=`Sahna ${i+1} / ${N}`;nnum.textContent=i+1;ntitle.textContent=s.t;ntext.textContent=s.text;nfocus.innerHTML=s.focus?'<b>E‘tibor:</b> '+s.focus:'';
+  [...progress.children].forEach((b,k)=>{b.classList.toggle('done',k<i);b.firstChild.style.width=k<i?'100%':'0';});[...list.children].forEach((li,k)=>li.classList.toggle('on',k===i));}
+async function goto(i){i=Math.max(0,Math.min(N-1,i));if(run){run.dead=true;run.cancels.forEach(c=>c());}waiters=[];tickers=[];camAnim=null;flashEnemy=0;
+  idx=i;finished=false;setNarr(i);clearUI();buildWorld();for(let k=0;k<i;k++)scenes[k].final();hud();
+  const r={dead:false,cancels:[]};run=r;
+  try{await scenes[i].run();if(r.dead)return;
+    progress.children[i].firstChild.style.width='100%';
+    if(i<N-1){await wait(900);if(!r.dead)goto(i+1);}else{finished=true;playing=false;playBtn.textContent='↺ Boshidan';}
+  }catch(e){if(!(e instanceof Cancelled))console.error(e);}
+}
+setInterval(()=>{if(!run||run.dead)return;const b=progress.children[idx];if(!b)return;const w=parseFloat(b.firstChild.style.width)||0;if(w<92&&playing)b.firstChild.style.width=(w+1.2)+'%';},250);
+playBtn.onclick=()=>{if(finished){goto(0);playing=true;playBtn.textContent='‖ Pauza';return;}playing=!playing;playBtn.textContent=playing?'‖ Pauza':'▶ Davom';};
+document.getElementById('prev').onclick=()=>{goto(idx-1);};
+document.getElementById('next').onclick=()=>{goto(idx+1);};
+document.getElementById('restart').onclick=()=>{goto(idx);};
+document.querySelectorAll('.speed button').forEach(b=>b.onclick=()=>{speed=parseFloat(b.dataset.s);document.querySelectorAll('.speed button').forEach(x=>x.classList.toggle('on',x===b));});
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key===' '){e.preventDefault();playBtn.click();}if(e.key==='ArrowRight')goto(idx+1);if(e.key==='ArrowLeft')goto(idx-1);});
+buildWorld();setNarr(0);resize();goto(0);
+</script>

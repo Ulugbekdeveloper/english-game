@@ -1,0 +1,402 @@
+<meta charset="utf-8">
+<title>Imperiya Vizual Senariy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: 16:9 stage with painted concept backgrounds and a dark, minimal HUD drawn in HTML on top; narration and transport under it. Page chrome follows the viewer theme; the stage is its own world. */
+:root{--bg:#f3efe6;--fg:#241d14;--muted:#6b6050;--line:#d8cfbe;--panel:#fbf8f1;--accent:#8c2f28;--font-display:"Cinzel","Georgia",serif;--font-ui:"Source Sans 3","Segoe UI",system-ui,sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#17140f;--fg:#eae3d6;--muted:#a3978a;--line:#3a332a;--panel:#211c16;--accent:#d9695f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17140f;--fg:#eae3d6;--muted:#a3978a;--line:#3a332a;--panel:#211c16;--accent:#d9695f;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:15px;line-height:1.45;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-block:18px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 18px;margin-bottom:12px}
+header h1{font-family:var(--font-display);font-weight:700;font-size:clamp(20px,3vw,30px);margin:0;letter-spacing:.02em;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:62ch}
+.counter{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600}
+
+/* stage */
+.stage{position:relative;width:100%;aspect-ratio:16/9;background:#14110d;border-radius:10px;overflow:hidden;container-type:inline-size;box-shadow:0 10px 40px rgba(0,0,0,.3);font-family:var(--font-ui);color:#f1e6cf;user-select:none}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:50% 50%;transition:transform 6s ease-in-out,opacity .6s ease,filter .6s ease}
+.bg.dim{filter:brightness(.45) blur(2px)}
+.hud{position:absolute;font-size:1.3cqw;line-height:1.3}
+.panel{background:rgba(24,19,14,.86);border:1px solid rgba(217,178,95,.35);border-radius:.5cqw;box-shadow:0 .4cqw 1.4cqw rgba(0,0,0,.45);color:#f1e6cf;backdrop-filter:blur(4px)}
+.gold{color:#d9b25f}.red{color:#e2574e}.green{color:#5fbf7a}.amber{color:#e8a33d}.rose{color:#e5534b}.mute{color:#b9a98c}
+
+/* top resource bar */
+.topbar{left:1cqw;right:1cqw;top:1cqw;height:4.2cqw;display:flex;align-items:center;gap:0;padding:0 .6cqw}
+.topbar .cell{display:flex;align-items:center;gap:.6cqw;padding:0 1.1cqw;height:100%;border-right:1px solid rgba(217,178,95,.2)}
+.topbar .cell:last-child{border-right:0;margin-left:auto}
+.topbar .ico{width:1.7cqw;height:1.7cqw;flex:none}
+.topbar b{font-size:1.65cqw;font-variant-numeric:tabular-nums;line-height:1}
+.topbar small{display:block;font-size:.85cqw;letter-spacing:.08em;text-transform:uppercase;color:#b9a98c}
+.topbar .name{font-family:var(--font-display);font-size:1.45cqw;font-weight:700;letter-spacing:.02em}
+.flag{width:2.2cqw;height:2.8cqw;border:1px solid rgba(255,255,255,.35);border-radius:.15cqw;flex:none;overflow:hidden}
+.flag svg{width:100%;height:100%;display:block}
+.chip{display:inline-flex;align-items:center;gap:.4cqw;padding:.15cqw .6cqw;border-radius:.3cqw;font-weight:700;font-size:1cqw;letter-spacing:.03em}
+.chip.active{background:rgba(95,191,122,.18);color:#5fbf7a;border:1px solid rgba(95,191,122,.5)}
+.chip.slowing{background:rgba(232,163,61,.18);color:#e8a33d;border:1px solid rgba(232,163,61,.5)}
+.chip.stopped{background:rgba(229,83,75,.18);color:#e5534b;border:1px solid rgba(229,83,75,.5)}
+
+/* expansion income indicator */
+.inc{left:50%;top:6cqw;transform:translateX(-50%);width:44cqw;padding:.7cqw 1cqw}
+.inc .row{display:flex;align-items:center;gap:1cqw}
+.inc .st{display:flex;align-items:center;gap:.5cqw;font-family:var(--font-display);font-weight:700;font-size:1.35cqw;letter-spacing:.05em}
+.inc .st svg{width:1.6cqw;height:1.6cqw}
+.inc .pct{font-size:1.5cqw;font-weight:700;font-variant-numeric:tabular-nums}
+.inc .tm{margin-left:auto;color:#b9a98c;font-variant-numeric:tabular-nums;font-size:1.15cqw}
+.bar{position:relative;height:.9cqw;margin-top:.55cqw;border-radius:.45cqw;background:rgba(255,255,255,.08);overflow:hidden}
+.bar .zone{position:absolute;top:0;bottom:0}
+.bar .z1{left:0;width:50%;background:rgba(95,191,122,.25)}.bar .z2{left:50%;width:50%;background:rgba(232,163,61,.25)}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:#5fbf7a;transition:width .15s linear}
+.bar .mark{position:absolute;top:-.2cqw;bottom:-.2cqw;width:2px;background:#f1e6cf;opacity:.6;left:50%}
+.inc .cta{display:none;margin-top:.6cqw;align-items:center;justify-content:space-between;gap:1cqw;font-size:1.1cqw}
+.inc.stopped .cta{display:flex}
+.btn{font:inherit;font-weight:700;font-size:1.25cqw;padding:.6cqw 1.4cqw;border-radius:.45cqw;border:1px solid rgba(217,178,95,.5);background:rgba(24,19,14,.9);color:#f1e6cf;display:inline-flex;align-items:center;gap:.5cqw;white-space:nowrap;cursor:default}
+.btn.primary{background:#8c2f28;border-color:#b8473f;color:#fff}
+.btn.danger{background:#5b2a86;border-color:#7a44aa;color:#fff}
+.btn.pressed{transform:translateY(.15cqw);filter:brightness(.85)}
+.btn.pulse{animation:pulse 1s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 .6cqw rgba(140,47,40,.35)}}
+
+/* left stats, right diplomacy, bottom actions */
+.left{left:1cqw;top:6cqw;width:18cqw;padding:.7cqw .9cqw;font-size:1.05cqw}
+.left h5,.right h5{margin:0 0 .4cqw;font-family:var(--font-display);font-size:.95cqw;letter-spacing:.1em;text-transform:uppercase;color:#d9b25f}
+.kv{display:flex;justify-content:space-between;gap:.6cqw;padding:.15cqw 0;border-bottom:1px solid rgba(255,255,255,.06);font-variant-numeric:tabular-nums}
+.kv:last-child{border-bottom:0}
+.right{right:1cqw;top:6cqw;width:19cqw;padding:.7cqw .9cqw;font-size:1.05cqw}
+.actions{left:50%;bottom:1.2cqw;transform:translateX(-50%);display:flex;gap:.7cqw}
+.sheet{left:50%;bottom:5.4cqw;transform:translateX(-50%);width:46cqw;padding:.9cqw 1.2cqw}
+.sheet .kind{display:flex;justify-content:space-between;font-size:.95cqw;letter-spacing:.08em;text-transform:uppercase;color:#d9b25f;font-weight:700}
+.sheet .q{font-size:1.6cqw;font-weight:600;margin:.4cqw 0 .5cqw}
+.sheet .q small{display:block;font-size:1.05cqw;color:#b9a98c;font-weight:400}
+.input{border:1px solid rgba(217,178,95,.4);background:rgba(255,255,255,.06);border-radius:.4cqw;padding:.5cqw .8cqw;font-size:1.4cqw;min-height:2.7cqw}
+.caret{display:inline-block;width:.15cqw;height:1.4cqw;background:#f1e6cf;vertical-align:-.2cqw;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.result{margin-top:.5cqw;font-size:1.15cqw;font-weight:700;min-height:1.5cqw}
+.float{position:absolute;font-weight:700;font-size:1.6cqw;color:#5fbf7a;text-shadow:0 .1cqw .3cqw #000;animation:rise 1.6s ease-out forwards;pointer-events:none}
+@keyframes rise{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-3cqw)}}
+.toasts{position:absolute;left:50%;top:12cqw;transform:translateX(-50%);display:flex;flex-direction:column;gap:.5cqw;align-items:center;width:46cqw;pointer-events:none}
+.toast{padding:.5cqw 1.1cqw;font-size:1.15cqw;font-weight:600;border-left:.35cqw solid #d9b25f;animation:tin .25s ease-out}
+.toast.war{border-left-color:#e5534b}.toast.ok{border-left-color:#5fbf7a}.toast.warn{border-left-color:#e8a33d}
+@keyframes tin{from{opacity:0;transform:translateY(-.6cqw)}}
+.banner{left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;padding:1.2cqw 2.4cqw;font-family:var(--font-display);font-size:2.1cqw;font-weight:700;letter-spacing:.04em}
+.banner small{display:block;font-family:var(--font-ui);font-size:1.15cqw;font-weight:400;letter-spacing:0;color:#b9a98c;margin-top:.3cqw}
+.hint{position:absolute;padding:.55cqw .9cqw;font-size:1.15cqw;background:#f1e6cf;color:#241d14;border-radius:.4cqw;max-width:24cqw;line-height:1.3;box-shadow:0 .3cqw 1cqw rgba(0,0,0,.45);font-weight:600}
+.hint b{color:#8c2f28}
+.hint::before{content:"";position:absolute;width:.9cqw;height:.9cqw;background:#f1e6cf;transform:rotate(45deg)}
+.hint.left::before{left:-.45cqw;top:1cqw}.hint.right::before{right:-.45cqw;top:1cqw}.hint.up::before{top:-.45cqw;left:1.4cqw}.hint.down::before{bottom:-.45cqw;left:1.4cqw}
+.cursor{position:absolute;width:2.4cqw;height:2.4cqw;z-index:50;pointer-events:none;transition:left .55s cubic-bezier(.3,.7,.3,1),top .55s cubic-bezier(.3,.7,.3,1);filter:drop-shadow(0 .2cqw .3cqw rgba(0,0,0,.6))}
+.cursor::after{content:"";position:absolute;left:-1cqw;top:-1cqw;width:2cqw;height:2cqw;border-radius:50%;border:.25cqw solid #fff;opacity:0;transform:scale(.4)}
+.cursor.click::after{animation:clk .45s ease-out}
+@keyframes clk{0%{opacity:1;transform:scale(.3)}100%{opacity:0;transform:scale(1.6)}}
+.ring{position:absolute;width:6cqw;height:6cqw;border:.3cqw solid #e2574e;border-radius:50%;transform:translate(-50%,-50%);animation:ringp 1.2s ease-out infinite;pointer-events:none}
+@keyframes ringp{from{opacity:1;transform:translate(-50%,-50%) scale(.6)}to{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
+
+/* terrain panel */
+.terrain{width:24cqw;padding:.8cqw 1cqw}
+.terrain .t{display:flex;align-items:center;gap:.7cqw;font-family:var(--font-display);font-size:1.35cqw;font-weight:700;color:#d9b25f}
+.terrain .t i{width:2.2cqw;height:2.2cqw;border-radius:.3cqw;background:#c9a96a;display:block;flex:none}
+.terrain .g{display:grid;grid-template-columns:1fr 1fr;gap:.3cqw .8cqw;margin-top:.5cqw;font-size:1.05cqw}
+.terrain .g b{display:block;font-size:1.35cqw;font-variant-numeric:tabular-nums}
+.terrain .g span{color:#b9a98c;font-size:.9cqw;text-transform:uppercase;letter-spacing:.05em}
+.terrain .own{margin-top:.5cqw;border-top:1px solid rgba(255,255,255,.08);padding-top:.4cqw;font-size:1.05cqw;display:flex;gap:.5cqw;align-items:center}
+
+/* attack panel */
+.attack{left:50%;bottom:5.4cqw;transform:translateX(-50%);width:44cqw;padding:.9cqw 1.2cqw}
+.attack .title{display:flex;justify-content:space-between;font-weight:700;font-size:1.4cqw}
+.slider{position:relative;height:2cqw;margin:.7cqw 0 .4cqw;border-radius:1cqw;background:rgba(255,255,255,.08);border:1px solid rgba(217,178,95,.3);overflow:hidden}
+.slider .fill{position:absolute;inset:0;width:0;background:#8c2f28}
+.slider .lab{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:1.15cqw}
+.route{display:grid;grid-template-columns:repeat(3,1fr);gap:.6cqw;margin-top:.5cqw}
+.route div{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:.4cqw;padding:.4cqw .6cqw;font-size:1cqw;color:#b9a98c}
+.route b{display:block;font-size:1.4cqw;color:#f1e6cf;font-variant-numeric:tabular-nums}
+.route .warn b{color:#e8a33d}
+.attack .row{display:flex;gap:.7cqw;justify-content:flex-end;margin-top:.7cqw}
+.prog{display:flex;gap:1cqw;align-items:center;font-size:1.1cqw;margin-top:.5cqw}
+.prog .b{flex:1;height:.9cqw;background:rgba(255,255,255,.08);border-radius:.45cqw;overflow:hidden}
+.prog .b i{display:block;height:100%;width:100%;background:#e2574e}
+
+/* full screens */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2cqw;padding:3cqw;font-size:1.35cqw;color:#f1e6cf}
+.screen .logo{font-family:var(--font-display);font-size:3.6cqw;font-weight:700;letter-spacing:.1em;color:#d9b25f;line-height:1;text-shadow:0 .2cqw 1cqw #000}
+.screen .logo small{display:block;font-family:var(--font-ui);font-size:1.2cqw;font-weight:400;letter-spacing:.25em;color:#f1e6cf;text-transform:uppercase;margin-top:.5cqw}
+.ctor{width:78cqw;display:grid;grid-template-columns:22cqw 1fr;gap:1.4cqw;padding:1.2cqw 1.4cqw}
+.ctor .prev{display:flex;flex-direction:column;align-items:center;gap:.6cqw}
+.ctor .prev .big{width:16cqw;height:20cqw;border:1px solid rgba(255,255,255,.3);border-radius:.3cqw;overflow:hidden}
+.ctor .prev .big svg{width:100%;height:100%;display:block}
+.ctor .sizes{display:flex;gap:1cqw;align-items:flex-end}
+.ctor .sizes .flag.s48{width:3cqw;height:3.8cqw}.ctor .sizes .flag.s24{width:1.6cqw;height:2cqw}
+.ctor .sizes span{font-size:.85cqw;color:#b9a98c;display:block;text-align:center}
+.ctor .tabs{display:flex;gap:.4cqw;margin-bottom:.6cqw}
+.ctor .tabs div{padding:.4cqw 1cqw;border-radius:.4cqw;background:rgba(255,255,255,.06);color:#b9a98c;font-weight:600;font-size:1.1cqw}
+.ctor .tabs div.on{background:#d9b25f;color:#241d14}
+.opts{display:grid;grid-template-columns:repeat(6,1fr);gap:.6cqw}
+.opt{aspect-ratio:1;border-radius:.4cqw;border:1px solid rgba(255,255,255,.15);display:grid;place-items:center;background:rgba(255,255,255,.04);font-size:.95cqw;color:#b9a98c;text-align:center;padding:.3cqw}
+.opt.on{outline:.25cqw solid #d9b25f;color:#f1e6cf}
+.opt svg{width:70%;height:70%}
+.ctor .nm{margin-top:1cqw}
+.ctor .nm label{display:block;font-size:.9cqw;letter-spacing:.08em;text-transform:uppercase;color:#d9b25f;font-weight:700;margin-bottom:.3cqw}
+.ctor .note{margin-top:.9cqw;font-size:1.05cqw;color:#b9a98c}
+.phone{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:94%;aspect-ratio:9/16;border-radius:3cqw;border:.5cqw solid #0d0b09;overflow:hidden;box-shadow:0 1cqw 3cqw rgba(0,0,0,.6);background:#000}
+.phone img{width:100%;height:100%;object-fit:cover;display:block}
+.families{width:86cqw;padding:1cqw 1.4cqw}
+.families h3{margin:0 0 .6cqw;font-family:var(--font-display);font-size:1.6cqw;color:#d9b25f}
+.families .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:.5cqw}
+.families .f{border:1px solid rgba(255,255,255,.12);border-radius:.4cqw;padding:.5cqw .6cqw;font-size:.95cqw;display:flex;flex-direction:column;gap:.15cqw;background:rgba(255,255,255,.04)}
+.families .f b{font-size:1.05cqw;color:#f1e6cf}
+.families .f span{color:#b9a98c;font-size:.9cqw}
+.families .f.hot{outline:.25cqw solid #e2574e}
+.families .rule{margin-top:.8cqw;font-size:1.1cqw;color:#b9a98c}
+.families .rule b{color:#d9b25f}
+.resultcard{width:60cqw;padding:1.4cqw 2cqw}
+.resultcard h3{font-family:var(--font-display);margin:0 0 .8cqw;font-size:2.2cqw;color:#d9b25f;text-align:center}
+.resultcard .big{display:grid;grid-template-columns:repeat(4,1fr);gap:.8cqw;margin-bottom:1cqw}
+.resultcard .big div{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:.5cqw;padding:.7cqw;text-align:center}
+.resultcard .big b{display:block;font-size:2.2cqw;font-variant-numeric:tabular-nums}
+.resultcard .big span{font-size:.95cqw;color:#b9a98c;text-transform:uppercase;letter-spacing:.05em}
+.skills{display:grid;grid-template-columns:1fr 1fr;gap:1cqw;font-size:1.1cqw}
+.skills .b{height:.9cqw;background:rgba(255,255,255,.08);border-radius:.45cqw;overflow:hidden;margin:.3cqw 0 .6cqw}
+.skills .b i{display:block;height:100%;background:#5fbf7a}
+.chips{display:flex;flex-wrap:wrap;gap:.4cqw}
+.chips span{background:rgba(229,83,75,.15);border:1px solid rgba(229,83,75,.4);border-radius:.3cqw;padding:.1cqw .5cqw;font-size:1cqw}
+.arrow{position:absolute;pointer-events:none}
+.arrow svg{width:100%;height:100%;overflow:visible}
+
+/* narration + controls (same as the scenario page) */
+.narr{display:grid;grid-template-columns:auto 1fr;gap:14px 18px;align-items:start;margin-top:16px;padding:14px 18px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.narr .num{font-family:var(--font-display);font-size:30px;font-weight:700;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums;min-width:44px}
+.narr h2{margin:0 0 4px;font-family:var(--font-display);font-size:19px;font-weight:700;text-wrap:balance}
+.narr p{margin:0;max-width:72ch}
+.narr .focus{margin:8px 0 0;color:var(--muted);font-size:14px}
+.narr .focus b{color:var(--fg)}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.controls button{font:inherit;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;min-width:44px}
+.controls button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.controls button.play{background:var(--accent);color:#fff;border-color:transparent;min-width:120px}
+.controls .speed{display:flex;gap:4px;margin-left:auto}
+.controls .speed button.on{background:var(--fg);color:var(--bg)}
+.progress{display:flex;gap:3px;width:100%;margin-top:4px}
+.progress i{flex:1;height:7px;border-radius:3px;background:var(--line);position:relative;overflow:hidden;cursor:pointer}
+.progress i b{position:absolute;inset:0;width:0;background:var(--accent)}
+.progress i.done b{width:100%;opacity:.55}
+.scenes{margin-top:28px}
+.scenes h3{font-family:var(--font-display);font-size:17px;margin:0 0 10px}
+.scenes ol{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px}
+.scenes li{display:flex;gap:10px;align-items:baseline;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;font-size:14px}
+.scenes li:hover,.scenes li.on{border-color:var(--accent)}
+.scenes li .n{font-family:var(--font-display);color:var(--accent);font-weight:700;min-width:22px;font-variant-numeric:tabular-nums}
+.scenes li .t{font-weight:600}
+.scenes li .d{color:var(--muted);font-size:12.5px;display:block}
+.credit{margin-top:14px;color:var(--muted);font-size:13px}
+@media (max-width:640px){.narr{grid-template-columns:1fr}.narr .num{display:none}}
+@media (prefers-reduced-motion:reduce){.cursor,.bg{transition:none}.btn.pulse,.ring,.float{animation:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Imperiya: vizual senariy</h1>
+      <p>O'yin qanday ko'rinishi va qanday ishlashi: bo'yalgan tarixiy xarita, haqiqiy geografiya, mintaqaga bog'liq qo'shinlar, erkin nom va bayroq, hudud speaking/writing mashqlari bilan kengayadi, qo'shin daromadi kengayishga bog'liq. Rasmlar: Figma AI konseptlari, HUD: jonli HTML.</p>
+    </div>
+    <div class="counter" id="counter">Sahna 1 / 14</div>
+  </header>
+
+  <div class="stage" id="stage">
+    <img class="bg" id="bg" src="img/05-world.jpg" alt="">
+    <div id="overlay"></div>
+    <div class="toasts" id="toasts"></div>
+    <div class="cursor" id="cursor" hidden><svg viewBox="0 0 24 24" width="100%" height="100%"><path d="M5 3l14 8-6 1.5L16 19l-3 1.5-3-6.5L5 18z" fill="#fff" stroke="#241d14" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+  </div>
+
+  <div class="narr">
+    <div class="num" id="nnum">1</div>
+    <div><h2 id="ntitle"></h2><p id="ntext"></p><p class="focus" id="nfocus"></p></div>
+  </div>
+  <div class="controls">
+    <button id="prev" aria-label="Oldingi sahna">◀</button>
+    <button id="play" class="play">▶ Boshlash</button>
+    <button id="next" aria-label="Keyingi sahna">▶|</button>
+    <button id="restart">↺ Sahnani qayta</button>
+    <div class="speed" aria-label="Tezlik"><button data-s="1" class="on">1×</button><button data-s="1.5">1.5×</button><button data-s="2">2×</button></div>
+    <div class="progress" id="progress"></div>
+  </div>
+  <section class="scenes"><h3>Barcha sahnalar</h3><ol id="scenelist"></ol></section>
+  <p class="credit">Konsept rasmlar Figma AI (gpt-image) bilan yaratilgan va yo'nalishni ko'rsatadi; yakuniy o'yin grafikasi rassom tomonidan shu uslubda ishlanadi.</p>
+</div>
+
+<script>
+'use strict';
+/* ---------- clock, scheduler, transport (same pattern as the scenario page) ---------- */
+let playing=false,speed=1,clock=0,waiters=[],last=performance.now(),tickers=[];
+function frame(now){const dt=Math.min(100,now-last);last=now;if(playing){clock+=dt*speed;for(const t of tickers)t(dt*speed/1000);waiters=waiters.filter(w=>{if(clock>=w.until){w.res();return false;}return true;});}requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+class Cancelled extends Error{}
+let run=null;
+function wait(ms){return new Promise((res,rej)=>{const r=run;if(!r||r.dead)return rej(new Cancelled());r.cancels.push(()=>rej(new Cancelled()));waiters.push({until:clock+ms,res});});}
+
+const stage=document.getElementById('stage'),overlay=document.getElementById('overlay'),toasts=document.getElementById('toasts'),cursor=document.getElementById('cursor'),bg=document.getElementById('bg');
+const el=h=>{const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstElementChild;};
+const add=h=>{const e=el(h);overlay.appendChild(e);return e;};
+function clearUI(){overlay.innerHTML='';toasts.innerHTML='';cursor.hidden=true;bg.classList.remove('dim');}
+function setBg(src,transform='scale(1)',dim=false){if(bg.getAttribute('src')!==src){bg.style.transition='none';bg.style.transform=transform;bg.setAttribute('src',src);void bg.offsetWidth;bg.style.transition='';}else{bg.style.transform=transform;}bg.classList.toggle('dim',dim);}
+function zoomTo(transform){bg.style.transform=transform;}
+function toast(text,kind='',ms=3800){const t=el(`<div class="panel toast ${kind}">${text}</div>`);toasts.appendChild(t);setTimeout(()=>t.remove(),ms/speed);}
+async function cursorTo(target,click=true){cursor.hidden=false;const r=stage.getBoundingClientRect();let x,y;if(Array.isArray(target)){x=target[0]*r.width/100;y=target[1]*r.height/100;}else{const b=target.getBoundingClientRect();x=b.left-r.left+b.width/2;y=b.top-r.top+b.height/2;}
+  cursor.style.left=x+'px';cursor.style.top=y+'px';await wait(650);if(click){cursor.classList.remove('click');void cursor.offsetWidth;cursor.classList.add('click');if(!Array.isArray(target)&&target.classList&&target.classList.contains('btn')){target.classList.add('pressed');setTimeout(()=>target.classList.remove('pressed'),200);}await wait(380);}}
+async function typeInto(node,text,per=45){node.innerHTML='<i class="caret"></i>';let s='';for(const ch of text){s+=ch;node.innerHTML=s.replace(/</g,'&lt;')+'<i class="caret"></i>';await wait(per+Math.random()*30);}node.textContent=s;}
+function hint(text,x,y,dir='left'){return add(`<div class="hint ${dir}" style="left:${x};top:${y}">${text}</div>`);}
+function floatText(text,x,y){const f=add(`<div class="float" style="left:${x};top:${y}">${text}</div>`);setTimeout(()=>f.remove(),1700/speed);}
+
+/* ---------- game model shown in the HUD ---------- */
+const ICON={shield:'<svg viewBox="0 0 24 24" fill="none" stroke="#d9b25f" stroke-width="1.8"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/></svg>',
+ sword:'<svg viewBox="0 0 24 24" fill="none" stroke="#e2574e" stroke-width="1.8" stroke-linecap="round"><path d="M14 4l6 6-9 9-6-6 9-9z"/><path d="M5 19l-2 2M8 16l-4 4"/></svg>',
+ book:'<svg viewBox="0 0 24 24" fill="none" stroke="#5fbf7a" stroke-width="1.8"><path d="M4 5h7a2 2 0 012 2v12a2 2 0 00-2-2H4zM20 5h-7a2 2 0 00-2 2v12a2 2 0 012-2h7z"/></svg>',
+ clock:'<svg viewBox="0 0 24 24" fill="none" stroke="#f1e6cf" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>',
+ up:'<svg viewBox="0 0 24 24" fill="#5fbf7a"><path d="M12 4l7 8h-4v8H9v-8H5z"/></svg>',
+ down:'<svg viewBox="0 0 24 24" fill="#e8a33d"><path d="M12 20l-7-8h4V4h6v8h4z"/></svg>',
+ stop:'<svg viewBox="0 0 24 24" fill="#e5534b"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>'};
+const PAL=['#8c2f28','#d9b25f','#1f4e79','#3a8f4a','#f1e6cf','#1b1611','#5b2a86','#c9662a'];
+function flagSVG(spec,w=100,h=130){const c=i=>PAL[i];let bgp='';const k=spec.bg.kind;
+  if(k==='solid')bgp=`<rect width="${w}" height="${h}" fill="${c(spec.bg.c1)}"/>`;
+  else if(k==='split-v')bgp=`<rect width="${w/2}" height="${h}" fill="${c(spec.bg.c1)}"/><rect x="${w/2}" width="${w/2}" height="${h}" fill="${c(spec.bg.c2)}"/>`;
+  else if(k==='split-h')bgp=`<rect width="${w}" height="${h/2}" fill="${c(spec.bg.c1)}"/><rect y="${h/2}" width="${w}" height="${h/2}" fill="${c(spec.bg.c2)}"/>`;
+  else bgp=`<rect width="${w}" height="${h}" fill="${c(spec.bg.c1)}"/><path d="M0 0L${w} ${h}V0z" fill="${c(spec.bg.c2)}"/>`;
+  let pat='';if(spec.pattern==='stripes')pat=Array.from({length:5},(_,i)=>`<rect y="${i*h/5+h/10-2}" width="${w}" height="4" fill="${c(spec.pc)}" opacity=".7"/>`).join('');
+  else if(spec.pattern==='girih')pat=Array.from({length:12},(_,i)=>`<rect x="${(i%4)*w/4+w/8-5}" y="${Math.floor(i/4)*h/3+h/6-5}" width="10" height="10" transform="rotate(45 ${(i%4)*w/4+w/8} ${Math.floor(i/4)*h/3+h/6})" fill="${c(spec.pc)}" opacity=".55"/>`).join('');
+  else if(spec.pattern==='border')pat=`<rect x="6" y="6" width="${w-12}" height="${h-12}" fill="none" stroke="${c(spec.pc)}" stroke-width="4"/>`;
+  let sym='';const s=spec.sc!==undefined?c(spec.sc):'#fff';const cx=w/2,cy=h/2,r=w*0.14*(spec.scale||1);
+  if(spec.symbol==='rings')sym=`<g fill="none" stroke="${s}" stroke-width="5"><circle cx="${cx-r*0.8}" cy="${cy-r*0.5}" r="${r}"/><circle cx="${cx+r*0.8}" cy="${cy-r*0.5}" r="${r}"/><circle cx="${cx}" cy="${cy+r*0.9}" r="${r}"/></g>`;
+  else if(spec.symbol==='crescent')sym=`<circle cx="${cx}" cy="${cy}" r="${r*1.5}" fill="${s}"/><circle cx="${cx+r*0.6}" cy="${cy}" r="${r*1.3}" fill="${c(spec.bg.c1)}"/>`;
+  else if(spec.symbol==='sun')sym=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${s}"/>${Array.from({length:8},(_,i)=>`<rect x="${cx-3}" y="${cy-r*2.2}" width="6" height="${r*0.8}" fill="${s}" transform="rotate(${i*45} ${cx} ${cy})"/>`).join('')}`;
+  else if(spec.symbol==='lion')sym=`<path d="M${cx-r*1.4} ${cy+r*1.3} l${r*0.6} -${r*2.2} l${r*0.5} ${r*0.9} l${r*0.5} -${r*1.4} l${r*0.5} ${r*1.2} l${r*0.7} -${r*0.9} l-${r*0.3} ${r*2.4} z" fill="${s}"/>`;
+  else if(spec.symbol==='sword')sym=`<rect x="${cx-3}" y="${cy-r*2}" width="6" height="${r*3.6}" fill="${s}"/><rect x="${cx-r}" y="${cy+r*0.6}" width="${r*2}" height="5" fill="${s}"/>`;
+  else if(spec.symbol==='star')sym=`<polygon points="${Array.from({length:10},(_,i)=>{const a=-Math.PI/2+i*Math.PI/5;const rr=i%2?r*0.6:r*1.5;return (cx+Math.cos(a)*rr)+','+(cy+Math.sin(a)*rr)}).join(' ')}" fill="${s}"/>`;
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${bgp}${pat}${sym}</svg>`;}
+const FLAG={bg:{kind:'split-v',c1:0,c2:1},pattern:'none',pc:1,symbol:'rings',sc:4,scale:1};
+const G={name:'Temuriylar',territory:560,army:184,score:30,bonus:0,time:754,since:0,attacking:false,incSpeed:1};
+const K=1.0;
+function phase(){return G.since<30?'active':G.since<60?'slowing':'stopped';}
+function income(){const m={active:1,slowing:.5,stopped:0}[phase()];return Math.round(K*Math.sqrt(G.territory)*m);}
+const fmt=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+function hudTop(){let t=overlay.querySelector('.topbar');if(!t){t=add(`<div class="hud panel topbar">
+  <div class="cell"><div class="flag" data-k="flag"></div><div class="name" data-k="name"></div></div>
+  <div class="cell"><div class="ico">${ICON.shield}</div><div><b class="gold" data-k="ter">0</b><small>Hudud</small></div></div>
+  <div class="cell"><div class="ico">${ICON.sword}</div><div><b class="red" data-k="army">0</b><small>Qo'shin</small></div></div>
+  <div class="cell"><div><b data-k="inc">+0</b><small>Daromad / min <span class="chip" data-k="chip"></span></small></div></div>
+  <div class="cell"><div class="ico">${ICON.book}</div><div><b class="green" data-k="bonus">+0</b><small>Learning bonus</small></div></div>
+  <div class="cell"><div class="ico">${ICON.clock}</div><div><b data-k="time">0:00</b><small>/ 30:00</small></div></div></div>`);
+  t.querySelector('[data-k=flag]').innerHTML=flagSVG(FLAG);t.querySelector('[data-k=name]').textContent=G.name;}
+  const p=phase();t.querySelector('[data-k=ter]').textContent=G.territory;t.querySelector('[data-k=army]').textContent=G.army;t.querySelector('[data-k=inc]').textContent='+'+income();
+  const ch=t.querySelector('[data-k=chip]');ch.className='chip '+p;ch.textContent={active:'100%',slowing:'50%',stopped:'0%'}[p];
+  t.querySelector('[data-k=bonus]').textContent='+'+G.bonus;t.querySelector('[data-k=time]').textContent=fmt(G.time);return t;}
+function hudInc(){let n=overlay.querySelector('.inc');if(!n){n=add(`<div class="hud panel inc"><div class="row"><div class="st"><span data-k="ico"></span><span data-k="lab"></span></div><div class="pct" data-k="pct"></div><div class="tm" data-k="tm"></div></div>
+  <div class="bar"><div class="zone z1"></div><div class="zone z2"></div><div class="mark"></div><div class="fill" data-k="fill"></div></div>
+  <div class="cta"><span class="mute">Daromad to'xtadi: yangi hudud egallang</span><div class="btn primary pulse" data-k="cta">✎ Kengaytirish</div></div></div>`);}
+  const p=phase();n.className='hud panel inc '+p;n.querySelector('[data-k=ico]').innerHTML={active:ICON.up,slowing:ICON.down,stopped:ICON.stop}[p];
+  n.querySelector('[data-k=lab]').innerHTML={active:'<span class="green">FAOL</span>',slowing:'<span class="amber">SEKINLASHMOQDA</span>',stopped:'<span class="rose">TO‘XTADI</span>'}[p];
+  n.querySelector('[data-k=pct]').innerHTML={active:'<span class="green">100%</span> daromad',slowing:'<span class="amber">50%</span> daromad',stopped:'<span class="rose">0%</span> daromad'}[p];
+  n.querySelector('[data-k=tm]').textContent=p==='active'?`50% gacha ${Math.ceil(30-G.since)} s`:p==='slowing'?`to‘xtashgacha ${Math.ceil(60-G.since)} s`:`kengaytirish kerak`;
+  const f=n.querySelector('[data-k=fill]');f.style.width=Math.min(100,G.since/60*100)+'%';f.style.background={active:'#5fbf7a',slowing:'#e8a33d',stopped:'#e5534b'}[p];return n;}
+function hudSides(){if(!overlay.querySelector('.left'))add(`<div class="hud panel left"><h5>Davlat</h5><div class="kv"><span class="mute">Hudud daromadi</span><b>1.0 × √${G.territory}</b></div><div class="kv"><span class="mute">Ko'paytirgich</span><b data-k="mult">×1.0</b></div><div class="kv"><span class="mute">Oxirgi egallash</span><b data-k="last">0 s oldin</b></div><div class="kv"><span class="mute">Qo'shin madaniyati</span><b>Turkiy-mo'g'ul</b></div><div class="kv"><span class="mute">Daraja</span><b>A2</b></div></div>`);
+  if(!overlay.querySelector('.right'))add(`<div class="hud panel right"><h5>Diplomatiya</h5><div class="kv"><span>Oltin O'rda</span><b class="green">ittifoq</b></div><div class="kv"><span>Safaviylar</span><b class="rose">urush</b></div><div class="kv"><span>Mo'g'ul ulusi</span><b class="mute">betaraf</b></div><h5 style="margin-top:.6cqw">Reyting</h5><div class="kv"><span>1 Min sulolasi</span><b>2 800</b></div><div class="kv"><span>2 Mo'g'ul ulusi</span><b>2 480</b></div><div class="kv"><span>9 <b class="gold">Temuriylar</b></span><b>${G.territory}</b></div></div>`);
+  const l=overlay.querySelector('.left');l.querySelector('[data-k=mult]').textContent={active:'×1.0',slowing:'×0.5',stopped:'×0'}[phase()];l.querySelector('[data-k=last]').textContent=Math.floor(G.since)+' s oldin';}
+function hudActions(){if(!overlay.querySelector('.actions'))add(`<div class="hud actions"><div class="btn primary" id="expand">✎ Kengaytirish</div><div class="btn" id="mic">🎤 Speaking</div></div>`);}
+function hudAll(sides=true){hudTop();hudInc();if(sides)hudSides();hudActions();}
+let crossed={30:false,60:false};
+function startTick(){tickers=[(dt)=>{G.time+=dt;G.since+=dt*G.incSpeed;G._acc=(G._acc||0)+income()*dt*G.incSpeed/60;if(G._acc>=1){const n=Math.floor(G._acc);G._acc-=n;G.army+=n;}
+  if(G.since>=30&&!crossed[30]){crossed[30]=true;toast('⚠ 30 s: kengayish yo‘q, daromad 50% ga tushdi','warn');}
+  if(G.since>=60&&!crossed[60]){crossed[60]=true;toast(G.attacking?'■ Daromad to‘xtadi. Hujum davom etmoqda, lekin yangi hudud egallanmaguncha qo‘shin kelmaydi':'■ 60 s: daromad to‘xtadi. Yangi hudud egallang','war',5000);}
+  if(overlay.querySelector('.topbar'))hudAll(!!overlay.querySelector('.left'));}];}
+function capture(n){G.territory+=n;G.since=0;crossed={30:false,60:false};hudAll(!!overlay.querySelector('.left'));toast(`✔ Yangi hudud +${n}: taymer qayta boshlandi, daromad 100%`,'ok');floatText(`+${n} hudud`,'32%','7%');}
+
+/* ---------- scenes ---------- */
+const FAMILIES=[['Turkiy-mo‘g‘ul','Temuriylar, Oltin O‘rda, Chig‘atoy, Xorazm'],['Saljuqiy-turkman','Saljuqiylar'],['Usmoniy','Usmonli imperiyasi'],['Mamluk','Mamluklar, Ayyubiylar, Fotimiylar'],['Arab-xalifalik','Abbosiylar, Umaviylar'],['Fors','Safaviylar, Sosoniylar'],['G‘arbiy Yevropa','Fransiya, Angliya, Muqaddas Rim, Kastiliya'],['Vizantiya','Vizantiya'],['Sharqiy Yevropa','Polsha-Litva, Kiyev Rusi'],['Shimoliy Yevropa','Skandinaviya, Shotlandiya'],['O‘rta yer dengizi','Venetsiya'],['Hind','Dehli, Vijayanagara, Chola, Rajput'],['Xitoy','Min, Sin'],['Yapon-koreys','Sengoku, Koryo'],['Janubi-sharqiy Osiyo','Khmer, Majapahit, Pagan, Ayutthaya, Dai Viet'],['G‘arbiy Afrika','Mali, Songhay'],['Sharqiy Afrika','Efiopiya, Kongo, Nubiya'],['Amerika','Aztek, Inka, Maya, Mapuche']];
+const scenes=[
+{t:'Davlat nomi va bayroq konstruktori',d:'Erkin nom, 3 qatlamli bayroq: fon, naqsh, ramz.',text:'Foydalanuvchi davlatiga istalgan nom beradi va bayroqni uch qatlamdan yig‘adi: fon (rang va bo‘linish), naqsh, ramz. Rasm yuklash yo‘q, faqat tayyor elementlar. Bayroq uchta o‘lchamda ko‘rsatiladi, shunda xaritada 24 px da ham tanilishi tekshiriladi.',focus:'Nom va bayroq foydalanuvchiniki. Qo‘shin ko‘rinishi esa keyingi sahnada tanlanadigan mintaqadan keladi.',
+ async run(){setBg('img/05-world.jpg','scale(1.08)',true);const spec={bg:{kind:'solid',c1:0,c2:1},pattern:'none',pc:1,symbol:'none',sc:4,scale:1};
+  const s=add(`<div class="screen"><div class="logo" style="font-size:2.4cqw">Davlatingizni tuzing</div><div class="panel ctor"><div class="prev"><div class="big" data-k="big"></div><div class="sizes"><div><div class="flag s48" data-k="f48"></div><span>HUD</span></div><div><div class="flag s24" data-k="f24"></div><span>xarita</span></div></div></div>
+   <div><div class="tabs"><div class="on" data-tab="bg">1 · Fon</div><div data-tab="pat">2 · Naqsh</div><div data-tab="sym">3 · Ramz</div></div><div class="opts" data-k="opts"></div>
+   <div class="nm"><label>Davlat nomi</label><div class="input" data-k="nm"></div></div><div class="note">Taqiqlangan kombinatsiyalar avtomatik bloklanadi · ramz va fon kontrasti kamida 3:1</div></div></div></div>`);
+  const render=()=>{s.querySelector('[data-k=big]').innerHTML=flagSVG(spec);s.querySelector('[data-k=f48]').innerHTML=flagSVG(spec);s.querySelector('[data-k=f24]').innerHTML=flagSVG(spec);};
+  const tabs={bg:[['solid',0,1],['split-v',0,1],['split-h',2,1],['diag',3,4],['solid',2,0],['split-v',6,1]].map(([k,a,b])=>({l:'',sp:{...spec,bg:{kind:k,c1:a,c2:b},pattern:'none',symbol:'none'}})),
+    pat:['none','stripes','girih','border'].map(p=>({l:p==='none'?'yo‘q':p,sp:{...spec,pattern:p}})),sym:['none','rings','lion','crescent','sun','sword','star'].map(x=>({l:x==='none'?'yo‘q':x,sp:{...spec,symbol:x}}))};
+  const showTab=(name)=>{s.querySelectorAll('.tabs div').forEach(d=>d.classList.toggle('on',d.dataset.tab===name));const o=s.querySelector('[data-k=opts]');o.innerHTML='';for(const it of tabs[name]){const spv={...it.sp};if(name==='pat')spv.bg=spec.bg,spv.symbol=spec.symbol;if(name==='sym')spv.bg=spec.bg,spv.pattern=spec.pattern;o.appendChild(el(`<div class="opt">${flagSVG(spv,60,78)}</div>`));}};
+  render();showTab('bg');await wait(900);
+  await cursorTo(s.querySelectorAll('.opt')[1]);spec.bg={kind:'split-v',c1:0,c2:1};s.querySelectorAll('.opt')[1].classList.add('on');render();await wait(600);
+  await cursorTo(s.querySelector('[data-tab=pat]'));showTab('pat');await wait(400);await cursorTo(s.querySelectorAll('.opt')[2]);spec.pattern='girih';spec.pc=1;s.querySelectorAll('.opt')[2].classList.add('on');render();await wait(600);
+  await cursorTo(s.querySelector('[data-tab=sym]'));showTab('sym');await wait(400);await cursorTo(s.querySelectorAll('.opt')[1]);spec.symbol='rings';spec.sc=4;s.querySelectorAll('.opt')[1].classList.add('on');render();await wait(500);
+  await typeInto(s.querySelector('[data-k=nm]'),'Temuriylar');Object.assign(FLAG,spec);await wait(1200);}},
+{t:'Boshlang‘ich joy va qo‘shin madaniyati',d:'Dunyo xaritasi, joy tanlash, mintaqa qo‘shin ko‘rinishini belgilaydi.',text:'Bo‘yalgan tarixiy atlas uslubidagi butun dunyo xaritasi. Foydalanuvchi bo‘sh joyni bosadi. Tanlangan mintaqa qo‘shin madaniyatini belgilaydi: Movarounnahr tanlansa qo‘shin Turkiy-mo‘g‘ul oilasidan (otliq kamonchilar, lamellyar zirh). Nom va bayroq esa foydalanuvchi yaratgani bo‘lib qoladi.',focus:'18 vizual oila, 50 tarixiy fraksiya. Botlar tarixiy nom va bayroq bilan, odamlar o‘z nomi bilan.',
+ async run(){setBg('img/05-world.jpg','scale(1)');const b=add(`<div class="hud panel banner">Boshlang‘ich joyni tanlang<small>Qolgan vaqt: 20 s · bo‘sh joyga bosing</small></div>`);await wait(1500);zoomTo('scale(1.6) translate(-12%,-6%)');await wait(2200);b.remove();
+  await cursorTo([63,40]);add(`<div class="ring" style="left:63%;top:40%"></div>`);await wait(400);
+  hint('<b>Movarounnahr</b> tanlandi.<br>Qo‘shin madaniyati: <b>Turkiy-mo‘g‘ul</b> oilasi (otliq kamonchi, lamellyar zirh, tug‘).<br>Nom: Temuriylar (sizniki), bayroq: sizniki.','66%','43%','left');await wait(3600);}},
+{t:'O‘yin ekrani: xarita va HUD',d:'Resurs paneli, daromad indikatori, davlat statistikasi, diplomatiya.',text:'Xarita asosiy element, HUD to‘q va ixcham. Yuqorida resurs paneli: bayroq va nom, Hudud (qalqon, oltin), Qo‘shin (qilich, qizil), Daromad/min va uning holati, Learning bonus (kitob, yashil), vaqt. Ostida eng muhim element: kengayish daromadi indikatori. Chapda davlat statistikasi, o‘ngda diplomatiya va reyting.',focus:'Hudud va qo‘shin alohida rang va ikonka bilan, hech qachon bitta resurs sifatida ko‘rsatilmaydi.',
+ async run(){setBg('img/01-desktop.jpg','scale(1.38) translate(0,2%)');G.since=4;G.attacking=false;crossed={30:false,60:false};hudAll();startTick();await wait(1200);
+  const h1=hint('<b>Hudud</b> (oltin, qalqon) va <b>Qo‘shin</b> (qizil, qilich) alohida','18%','6.5%','up');await wait(2600);h1.remove();
+  const h2=hint('Daromad indikatori: holat ikonka + matn + foiz bilan, faqat rang emas','50%','12.5%','up');await wait(2800);h2.remove();}},
+{t:'Writing mashqi xarita ustida',d:'Panel pastda, xarita ishlab turadi, to‘g‘ri javob hudud beradi va taymerni yangilaydi.',text:'Kengaytirish bosiladi, pastda kichik panel chiqadi, boshqa ekranga o‘tilmaydi. Topshiriq o‘zbekcha, javob inglizcha. To‘g‘ri javob: hudud +24, kengayish taymeri 0 ga qaytadi (daromad 100%), Learning bonus +5 qo‘shin animatsiya bilan.',focus:'Faqat haqiqiy yangi hudud taymerni yangilaydi. Learning bonus esa alohida, hudud daromadi bilan aralashmaydi.',
+ async run(){setBg('img/01-desktop.jpg','scale(1.38) translate(0,2%)');G.since=22;hudAll();startTick();await wait(600);await cursorTo(overlay.querySelector('#expand'));
+  const sh=add(`<div class="hud panel sheet"><div class="kind"><span>✎ Writing · bo‘sh hududga kengayish</span><span>A2</span></div><div class="q">Inglizchaga yozing: <small>Men har kuni ertalab choy ichaman.</small></div><div class="input" data-k="a"></div><div class="result" data-k="r"></div></div>`);
+  await wait(600);await typeInto(sh.querySelector('[data-k=a]'),'I drink tea every morning');await wait(300);sh.querySelector('[data-k=r]').innerHTML='<span class="green">✔ To‘g‘ri</span> · +10 ball · hudud +24 · learning bonus +5 qo‘shin';
+  capture(24);G.bonus+=5;G.army+=5;hudAll();floatText('+5 ⚔ bonus','43%','7%');await wait(2600);sh.remove();}},
+{t:'Daromad holatlari: FAOL → SEKINLASHMOQDA → TO‘XTADI',d:'30 va 60 soniya ogohlantirishlari, aniq CTA.',text:'Kengayish bo‘lmasa taymer yuradi. 30 soniyada daromad 50% ga tushadi (sariq, pastga strelka, ogohlantirish). 60 soniyada 0% (qizil, to‘rtburchak, "kengaytirish kerak" va pulsatsiya qiluvchi tugma). Progress bar 60 soniyalik yo‘lni ikki zonada ko‘rsatadi, o‘yinchi 30 soniyaga yetishini oldindan ko‘radi.',focus:'Har holat ikonka, matn va foiz bilan farqlanadi. Vaqt bu sahnada 6× tezlashtirilgan.',
+ async run(){setBg('img/01-desktop.jpg','scale(1.38) translate(0,2%)');G.since=12;G.incSpeed=6;crossed={30:false,60:false};hudAll();startTick();await wait(9500);G.incSpeed=1;
+  const h=hint('<b>0%</b>: hudud daromadi to‘xtadi. Qo‘shin faqat learning bonusdan keladi. Kengaytirish tugmasi pulsatsiya qiladi.','50%','17%','up');await wait(3000);h.remove();await cursorTo(overlay.querySelector('[data-k=cta]'));capture(18);await wait(1800);}},
+{t:'Mobil ekran: speaking mashqi',d:'Ixcham HUD, indikator doim ko‘rinadi, mikrofon bottom sheet.',text:'Telefonda xarita yuqori qismda qoladi, HUD bitta tor qatorda, daromad indikatori shu qator ostida doim ko‘rinadi. Speaking mashqi pastdan chiqadi: inglizcha jumla, katta mikrofon tugmasi, to‘lqin, tanilgan matn va foiz. Mikrofon tugmasi writing kiritish maydoni bilan to‘qnashmaydi, bir qo‘l bilan ishlanadi.',focus:'Mobil va desktop bitta dizayn tizimi, faqat joylashuv farq qiladi.',
+ async run(){setBg('img/01-desktop.jpg','scale(1.2)',true);add(`<div class="phone"><img src="img/02-mobile.jpg" alt="Mobil ekran"></div>`);await wait(1200);
+  const h=hint('HUD bir qator: bayroq, Hudud, Qo‘shin, <b>100%</b> chip + ingichka progress, vaqt','12%','12%','right');await wait(2800);h.remove();
+  const h2=hint('Bottom sheet: jumla, mikrofon, to‘lqin, natija <b>92%</b>. Xarita yopilmaydi.','12%','62%','right');await wait(3000);h2.remove();}},
+{t:'Relyef paneli',d:'Katakka bosilganda: harakat narxi, himoya, hujum narxi, egasi.',text:'Relyef bo‘yalgan tekstura bilan ko‘rinadi (cho‘l barxanlari, tog‘ qoyalari), lekin o‘yin qoidalari ikonka va raqam bilan aytiladi. Cho‘lga bosilganda panel: "Qoraqum cho‘li", harakat ×2.0, himoya 0%, hujum narxi −25% qo‘shin, egasi yo‘q, eng yaqin shahar Marv.',focus:'Relyef "rangli ko‘pburchak" emas, lekin o‘yinchi harakat qoidasini chalkashtirmaydi: raqamlar panelda.',
+ async run(){setBg('img/03-attack.jpg','scale(1.3) translate(0,4%)');G.since=8;hudAll(false);startTick();await wait(800);await cursorTo([44,48]);
+  add(`<div class="hud panel terrain" style="left:46%;top:36%"><div class="t"><i style="background:#d8b87a"></i>Qoraqum cho‘li</div><div class="g"><div><b>×2.0</b><span>Harakat</span></div><div><b>+0%</b><span>Himoya</span></div><div><b class="amber">−25%</b><span>Hujum narxi</span></div><div><b class="mute">yo‘q</b><span>Egasi</span></div></div><div class="own">Eng yaqin shahar: Marv (karvonsaroy) · daryo kechuvi yo‘q</div></div>`);await wait(3200);
+  await cursorTo([58,70]);add(`<div class="hud panel terrain" style="left:60%;top:52%"><div class="t"><i style="background:#8f7a62"></i>Kopetdog‘</div><div class="g"><div><b>×2.5</b><span>Harakat</span></div><div><b class="green">+25%</b><span>Himoya</span></div><div><b class="amber">−40%</b><span>Hujum narxi</span></div><div><b class="rose">Safaviylar</b><span>Egasi · urush</span></div></div><div class="own">Tog‘ orqali hujum eng qimmat, himoya eng kuchli</div></div>`);await wait(3200);}},
+{t:'Hujum: qo‘shin tanlash va yo‘l hisobi',d:'Slayder, relyef yo‘qotishi, taxminiy natija.',text:'Dushman hududi bosiladi, hujum paneli chiqadi. Slayder qo‘shin sonini tanlaydi, panel yo‘ldagi relyef bo‘yicha yo‘qotishni va yetib boradigan qo‘shinni hisoblaydi. Hujum mashqi (raqib lug‘ati) natijasi hujum kuchini belgilaydi.',focus:'Hujum paytida ham kengayish taymeri yuradi: faqat dushman hududini haqiqatan egallash uni yangilaydi.',
+ async run(){setBg('img/03-attack.jpg','scale(1.3) translate(0,4%)');G.since=20;hudAll(false);startTick();await wait(600);
+  const a=add(`<div class="hud panel attack"><div class="title"><span>⚔ Hujum</span><span style="color:#b48ae0">Safaviylar · urush holati</span></div><div class="slider"><div class="fill" data-k="f"></div><div class="lab" data-k="l">0 qo‘shin · 0%</div></div>
+   <div class="route"><div>Yo‘l<br><span class="mute">cho‘l · tog‘</span></div><div class="warn">Yo‘qotish<b>−40%</b></div><div>Yetib boradi<b data-k="arr">0</b></div></div><div class="row"><div class="btn">Bekor</div><div class="btn primary" data-k="go">⚔ Hujumni boshlash</div></div></div>`);
+  const sl=a.querySelector('.slider');const r=sl.getBoundingClientRect(),s=stage.getBoundingClientRect();cursor.hidden=false;cursor.style.left=(r.left-s.left+6)+'px';cursor.style.top=(r.top-s.top+r.height/2)+'px';await wait(500);
+  for(let k=0;k<=60;k+=3){a.querySelector('[data-k=f]').style.width=k+'%';const tr=Math.round(G.army*k/100);a.querySelector('[data-k=l]').textContent=`${tr} qo‘shin · ${k}%`;a.querySelector('[data-k=arr]').textContent=Math.round(tr*0.6);cursor.style.left=(r.left-s.left+r.width*k/100)+'px';await wait(70);}
+  await wait(700);await cursorTo(a.querySelector('[data-k=go]'));G.attacking=true;const sent=Math.round(G.army*0.6);G.army-=sent;hudAll(false);a.remove();
+  const p=add(`<div class="hud panel attack" style="width:36cqw"><div class="title"><span>⚔ Hujum davom etmoqda</span><span style="color:#b48ae0">Safaviylar</span></div><div class="prog"><span>Qo‘shin</span><div class="b"><i data-k="b"></i></div><b data-k="n">${sent}</b></div><div class="prog"><span>Olingan hudud</span><b data-k="c">0</b><span class="mute">cho‘l: yo‘qotish 2×</span></div><div class="row"><div class="btn danger" data-k="stop">■ To‘xtatish</div></div></div>`);
+  let left=sent;for(let c=0;c<=40;c+=4){left=Math.max(0,sent-Math.round(c*1.5));p.querySelector('[data-k=b]').style.width=(left/sent*100)+'%';p.querySelector('[data-k=n]').textContent=left;p.querySelector('[data-k=c]').textContent=c;await wait(260);}
+  await cursorTo(p.querySelector('[data-k=stop]'));G.army+=Math.round(left*0.9);G.attacking=false;capture(40);toast(`■ To‘xtatildi: 40 hudud sizniki qoldi, ${Math.round(left*0.9)} qo‘shin qaytdi`);await wait(2200);}},
+{t:'Jang yaqin zoomda: ikki oila, saflar, hajm',d:'Temuriylar va Fransiya qo‘shinlari siluet bilan farqlanadi, saf hajmi qo‘shin sonini ko‘rsatadi.',text:'Yaqin zoomda qo‘shinlar realistik 2D sprite: Turkiy-mo‘g‘ul oilasi (otliq kamonchi, lamellyar zirh, tug‘) va G‘arbiy Yevropa oilasi (plastinali ritsar, arbaletchi, geraldika). Bu faqat rang farqi emas, siluet va jihoz farqi. Qo‘shin hajmi saf soni bilan ko‘rsatiladi, yonida raqam; minglab askar chizilmaydi.',focus:'Uzoq zoomda saf bitta bayroq + raqamga aylanadi, o‘rta zoomda 3–9 sprite, yaqinda 24 gacha.',
+ async run(){setBg('img/06-battle.jpg','scale(1)');await wait(1000);
+  const h1=hint('<b>Turkiy-mo‘g‘ul oilasi</b>: otliq kamonchilar, nayzachilar, tug‘li sarkarda. Katta qo‘shin = bir necha saf.','6%','8%','down');await wait(3000);h1.remove();
+  const h2=hint('<b>G‘arbiy Yevropa oilasi</b>: plastinali ritsarlar, arbaletchilar, ko‘k-oltin geraldika. Boshqa siluet, boshqa saf.','58%','8%','down');await wait(3000);h2.remove();
+  add(`<div class="arrow" style="left:30%;top:40%;width:16%;height:10%"><svg viewBox="0 0 160 60"><path d="M5 30H140" stroke="#e2574e" stroke-width="6" stroke-linecap="round"/><path d="M125 12l30 18-30 18z" fill="#e2574e"/></svg></div>`);
+  add(`<div class="arrow" style="left:54%;top:52%;width:16%;height:10%"><svg viewBox="0 0 160 60"><path d="M155 30H20" stroke="#4f8fd9" stroke-width="6" stroke-linecap="round"/><path d="M35 12L5 30l30 18z" fill="#4f8fd9"/></svg></div>`);
+  const h3=hint('Hujum va himoya yo‘nalishi strelka bilan; chegarada to‘qnashuv animatsiyasi, chang, o‘q. Xarita o‘qiladigan qoladi.','34%','66%','up');await wait(3400);h3.remove();}},
+{t:'Ittifoq muzokarasi',d:'Erkin chat, shartnoma bandlari, ikki imzo.',text:'Yon panelda muzokara, xarita ko‘rinib turadi. O‘yinchilar erkin yozishadi (inglizcha xabar ball beradi), shartnoma bandlarini o‘zlari belgilaydi va ikkalasi imzolaydi. Chegara yashil bo‘ladi. Shartnomani buzish mumkin, lekin obro‘ va qo‘shin yo‘qotiladi.',focus:'Botlar tarixiy bayroq bilan, odam o‘yinchi o‘z bayrog‘i bilan ko‘rinadi.',
+ async run(){setBg('img/04-alliance.jpg','scale(1)');await wait(1200);const h=hint('Inglizcha xabar: <b>+3 ball</b>. Bandlar: 10 daqiqa hujum yo‘q, Safaviylarga birga urush, hudud 50/50.','40%','30%','right');await wait(3200);h.remove();
+  const h2=hint('Ikki imzo → chegara <b>yashil</b>, ittifoqdoshlar bir-biriga hujum qila olmaydi.','40%','70%','right');await wait(3000);h2.remove();}},
+{t:'Qarshi hujum va chegara qaytishi',d:'Raqib hujum qiladi, ogohlantirish, himoya mashqi, hudud qaytadi.',text:'Safaviylar qarshi hujumga o‘tadi: chegara qizil yonadi, ogohlantirish chiqadi. Himoya mashqi (speaking) himoyani kuchaytiradi, so‘ng qarshi hujum bilan hudud qaytariladi. Yaqinda yo‘qotilgan hududni 2 daqiqa ichida qaytarish arzonroq. Himoya va qaytarib olish kengayish taymerini yangilamaydi.',focus:'Chegaralar hech qachon yakuniy emas.',
+ async run(){setBg('img/03-attack.jpg','scale(1.5) translate(-6%,-8%)');G.since=35;G.attacking=false;crossed={30:true,60:false};hudAll(false);startTick();await wait(600);toast('⚠ Safaviylar sizga hujum qilmoqda! Chegara: Hirot yo‘nalishi','war',4500);add(`<div class="ring" style="left:52%;top:58%"></div>`);await wait(1800);
+  const sh=add(`<div class="hud panel sheet"><div class="kind"><span>🛡 Himoya · speaking</span><span>A2</span></div><div class="q">Ayting: <small style="font-size:1.4cqw;color:#f1e6cf;font-weight:600">We will defend the city walls.</small></div><div class="result" data-k="r">Tinglanmoqda…</div></div>`);await wait(1800);sh.querySelector('[data-k=r]').innerHTML='<span class="green">✔ 96%</span> · himoya +30% · qarshi hujum ochildi';await wait(1500);sh.remove();
+  toast('⚔ Qarshi hujum: 60 qo‘shin, yaqinda yo‘qotilgan hudud (arzon)');G.army-=60;hudAll(false);await wait(1500);toast('Hudud qaytarib olindi: +22 · taymer yangilanmadi (bu yangi hudud emas)','ok',4500);G.territory+=22;hudAll(false);await wait(3000);}},
+{t:'Uzoq zoom va dunyo holati',d:'Davlatlar rang va bayroq bilan, saflar ikonkaga aylanadi.',text:'Uzoq zoomda qo‘shinlar chizilmaydi, faqat davlat rangi va bayroq; o‘rta zoomda saf bitta bayroq ikonkasi + raqam. Shu bilan 100 kishilik xona telefonda ham ishlaydi. Hudud chegaralari relyefni yashirmaydi: 28% shaffof rang, ingichka qo‘lda chizilgan chegara.',focus:'Siz qizil, ittifoq yashil, urush binafsha, qolganlar o‘z rangi.',
+ async run(){setBg('img/05-world.jpg','scale(1.15) translate(-4%,0)');await wait(1200);const h=hint('Uzoq zoom: faqat davlat ranglari, bayroqlar va tarixiy shaharlar. Qo‘shin sprite‘lari yo‘q, rendering arzon.','30%','20%','down');await wait(3200);h.remove();zoomTo('scale(1.9) translate(-14%,-8%)');await wait(3000);const h2=hint('O‘rta zoom: saf = bayroq + raqam. Yaqin zoomda to‘liq sprite‘lar.','56%','38%','left');await wait(3000);h2.remove();}},
+{t:'O‘yin yakuni va til natijasi',d:'G‘olib, o‘rin, hudud, ball, writing/speaking aniqligi, xato so‘zlar lug‘atga.',text:'30 daqiqa tugaganda eng katta davlat g‘olib (yoki undan oldin oxirgi tirik qolgan). Natija ekrani o‘yin va til natijasini birga ko‘rsatadi. Xato so‘zlar "Mening lug‘atim"ga tushadi va keyingi o‘yinlarda qayta so‘raladi. Daraja o‘zi yangilanadi.',focus:'Qulagan o‘yinchi ham ballini saqlaydi, faqat shu o‘yin tugaydi.',
+ async run(){setBg('img/01-desktop.jpg','scale(1.3)',true);await wait(500);add(`<div class="screen"><div class="panel resultcard"><h3>O‘yin tugadi · g‘olib: Min sulolasi</h3><div class="big"><div><b>7</b><span>O‘rin / 48</span></div><div><b class="gold">${G.territory}</b><span>Hudud</span></div><div><b>86</b><span>Ball</span></div><div><b class="green">+38</b><span>Reyting</span></div></div>
+  <div class="skills"><div>✎ Writing · 11 / 13 to‘g‘ri<div class="b"><i style="width:85%"></i></div>🎤 Speaking · 7 / 8, o‘rtacha 91%<div class="b"><i style="width:91%"></i></div><span class="mute">Daraja A2 → A2+ (B1 ga 140 ball qoldi)</span></div><div>Lug‘atimga qo‘shildi<div class="chips" style="margin-top:.4cqw"><span>bridge</span><span>merchants (talaffuz)</span><span>treaty</span></div><div class="mute" style="margin-top:.8cqw">Keyingi o‘yinda qayta so‘raladi</div><div style="display:flex;gap:.6cqw;margin-top:.8cqw"><div class="btn primary">Yana o‘ynash</div><div class="btn">Menyu</div></div></div></div></div></div>`);await wait(3500);}},
+{t:'18 vizual oila, 50 fraksiya',d:'Mintaqa → qo‘shin madaniyati jadvali. Avval 2 oila ishlab chiqariladi.',text:'50 tarixiy fraksiya 18 vizual oilaga guruhlangan: bir oila bitta sprite to‘plami. Foydalanuvchi boshlagan mintaqa oilani belgilaydi. Ishlab chiqarish ikki oiladan boshlanadi: Turkiy-mo‘g‘ul (Temuriylar) va G‘arbiy Yevropa (Fransiya), pipeline tasdiqlangach qolgan 16 oila qo‘shiladi.',focus:'Bu rasmlar yo‘nalish; yakuniy sprite‘lar rassom tomonidan modulli rig bilan ishlanadi (hisob: 2 oila ≈ 680 soat).',
+ async run(){setBg('img/06-battle.jpg','scale(1.2)',true);add(`<div class="screen"><div class="panel families"><h3>Mintaqa → qo‘shin madaniyati (18 oila)</h3><div class="grid">${FAMILIES.map(([a,b],i)=>`<div class="f ${i===0||i===6?'hot':''}"><b>${a}</b><span>${b}</span></div>`).join('')}</div><div class="rule"><b>Qoida:</b> davlat nomi va bayrog‘i foydalanuvchiniki; qo‘shin ko‘rinishi boshlang‘ich mintaqadan. Qizil ramkadagi ikki oila birinchi bo‘lib ishlab chiqariladi.</div></div></div>`);await wait(5000);}}
+];
+
+/* ---------- transport ---------- */
+let idx=0,finished=false;const N=scenes.length;
+const counter=document.getElementById('counter'),ntitle=document.getElementById('ntitle'),ntext=document.getElementById('ntext'),nfocus=document.getElementById('nfocus'),nnum=document.getElementById('nnum');
+const playBtn=document.getElementById('play'),progress=document.getElementById('progress'),list=document.getElementById('scenelist');
+scenes.forEach((s,i)=>{const b=el(`<i title="${i+1}. ${s.t}"><b></b></i>`);b.onclick=()=>goto(i);progress.appendChild(b);const li=el(`<li><span class="n">${i+1}</span><span><span class="t">${s.t}</span><span class="d">${s.d}</span></span></li>`);li.onclick=()=>{goto(i);window.scrollTo({top:0,behavior:'smooth'});};list.appendChild(li);});
+function setNarr(i){const s=scenes[i];counter.textContent=`Sahna ${i+1} / ${N}`;nnum.textContent=i+1;ntitle.textContent=s.t;ntext.textContent=s.text;nfocus.innerHTML=s.focus?'<b>E‘tibor:</b> '+s.focus:'';[...progress.children].forEach((b,k)=>{b.classList.toggle('done',k<i);b.firstChild.style.width=k<i?'100%':'0';});[...list.children].forEach((li,k)=>li.classList.toggle('on',k===i));}
+function resetModel(){Object.assign(G,{territory:560,army:184,score:30,bonus:0,time:754,since:0,attacking:false,incSpeed:1,_acc:0});crossed={30:false,60:false};}
+async function goto(i){i=Math.max(0,Math.min(N-1,i));if(run){run.dead=true;run.cancels.forEach(c=>c());}waiters=[];tickers=[];idx=i;finished=false;setNarr(i);clearUI();resetModel();
+  const r={dead:false,cancels:[]};run=r;try{await scenes[i].run();if(r.dead)return;progress.children[i].firstChild.style.width='100%';if(i<N-1){await wait(900);if(!r.dead)goto(i+1);}else{finished=true;playing=false;playBtn.textContent='↺ Boshidan';}}catch(e){if(!(e instanceof Cancelled))console.error(e);}}
+setInterval(()=>{if(!run||run.dead)return;const b=progress.children[idx];if(!b)return;const w=parseFloat(b.firstChild.style.width)||0;if(w<92&&playing)b.firstChild.style.width=(w+1.2)+'%';},250);
+playBtn.onclick=()=>{if(finished){goto(0);playing=true;playBtn.textContent='‖ Pauza';return;}playing=!playing;playBtn.textContent=playing?'‖ Pauza':'▶ Davom';};
+document.getElementById('prev').onclick=()=>goto(idx-1);document.getElementById('next').onclick=()=>goto(idx+1);document.getElementById('restart').onclick=()=>goto(idx);
+document.querySelectorAll('.speed button').forEach(b=>b.onclick=()=>{speed=parseFloat(b.dataset.s);document.querySelectorAll('.speed button').forEach(x=>x.classList.toggle('on',x===b));});
+document.addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();playBtn.click();}if(e.key==='ArrowRight')goto(idx+1);if(e.key==='ArrowLeft')goto(idx-1);});
+setNarr(0);goto(0);
+</script>
